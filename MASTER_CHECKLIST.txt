@@ -1,0 +1,345 @@
+═══════════════════════════════════════════════════════════════════════════════
+  MASTER CHECKLIST - AI EXAM SURVEILLANCE REPORT & EMAIL SYSTEM
+═══════════════════════════════════════════════════════════════════════════════
+
+This file tracks your progress through setup and deployment.
+
+═══════════════════════════════════════════════════════════════════════════════
+ PHASE 1: PRE-DEPLOYMENT SETUP (TODAY)
+═══════════════════════════════════════════════════════════════════════════════
+
+Installation:
+  [✅] reportlab installed: pip install reportlab
+  [✅] All Python modules created and tested
+  [✅] All directories created (logs/, reports/, evidence/, archived_reports/)
+  [✅] Documentation complete (7 guides, 2000+ lines)
+
+Reading Documentation:
+  [ ] Read: README_REPORTS_EMAIL.md (user guide) ← START HERE
+  [ ] Read: MAIN_INTEGRATION_TEMPLATE.py (code snippets)
+  [ ] Understand the system architecture
+  [ ] Know where to copy code from
+
+Email Setup:
+  [ ] Gmail 2FA enabled (https://myaccount.google.com/security)
+  [ ] Gmail App Password generated (https://myaccount.google.com/apppasswords)
+  [ ] App Password copied (16 characters)
+  [ ] Run setup: python setup_wizard.py
+  [ ] Follow email configuration prompts
+  [ ] Verify email_config.txt created
+  [ ] Test email connection in setup wizard
+
+═══════════════════════════════════════════════════════════════════════════════
+ PHASE 2: MAIN.PY INTEGRATION (30 MINUTES)
+═══════════════════════════════════════════════════════════════════════════════
+
+Code Integration:
+  [ ] Copy imports from MAIN_INTEGRATION_TEMPLATE.py to main.py:
+      - from alert_logger import AlertLogger
+      - from report_generator import generate_report
+      - from email_sender import send_report_email
+
+  [ ] Add initialization code:
+      - alert_logger = AlertLogger("logs", "current_session.json")
+      - alert_logger.update_student_count(30)  # Your actual number
+
+  [ ] Add alert logging in detection loop:
+      - When behavior detected:
+        alert_logger.add_alert(student_id, behavior_type, confidence, image_path)
+
+  [ ] Add report generation after monitoring ends:
+      - alerts = alert_logger.get_alerts()
+      - summary = alert_logger.get_summary(total_students=30)
+      - report_path = generate_report(alerts, summary)
+      - if send_report_email(report_path):
+          alert_logger.clear_logs()
+
+Testing Integration:
+  [ ] main.py imports without errors
+  [ ] AlertLogger initializes without errors
+  [ ] No syntax errors in main.py
+
+═══════════════════════════════════════════════════════════════════════════════
+ PHASE 3: TESTING (1-2 HOURS)
+═══════════════════════════════════════════════════════════════════════════════
+
+Test Setup:
+  [ ] Files in place:
+      - alert_logger.py ✓
+      - email_sender.py ✓
+      - setup_wizard.py ✓
+      - report_generator.py ✓
+      - main.py (with integration) ✓
+
+  [ ] Configuration ready:
+      - email_config.txt exists
+      - Contains valid Gmail credentials
+      - SMTP connection tested
+
+Test Session 1 (Dry Run - No Email):
+  [ ] Start monitoring: python main.py
+  [ ] Let system run for 1-2 minutes
+  [ ] Simulate some detections (manually for testing)
+  [ ] Stop monitoring: Press ESC
+  [ ] Check logs/ directory:
+      - logs/current_session.json exists
+      - Contains alert data
+  [ ] Check reports/ directory:
+      - PDF report created
+      - File size reasonable (>50 KB)
+  [ ] Check evidence/ directory:
+      - Screenshot images saved
+      - Images have correct format
+
+Test Session 2 (With Email):
+  [ ] Start monitoring: python main.py
+  [ ] Let system run normally
+  [ ] Trigger some actual detections
+  [ ] Stop monitoring: Press ESC
+  [ ] Watch console output:
+      - "Generating PDF report..."
+      - "Connecting to smtp.gmail.com:587..."
+      - "Email sent to..."
+  [ ] Check email inbox:
+      - Email received within 30 seconds
+      - PDF attachment present
+      - Professional formatting
+  [ ] Check logs cleared:
+      - logs/current_session.json cleared
+      - Ready for next session
+
+Test Session 3 (Continuous Monitoring):
+  [ ] Run multiple sessions back-to-back
+  [ ] Each generates report independently
+  [ ] Logs clear between sessions
+  [ ] Email sends consistently
+  [ ] No errors or exceptions
+
+═══════════════════════════════════════════════════════════════════════════════
+ PHASE 4: QUALITY ASSURANCE (30 MINUTES)
+═══════════════════════════════════════════════════════════════════════════════
+
+PDF Report Quality:
+  [ ] Report contains all required sections:
+      - Header with title and date
+      - Summary statistics
+      - Alert table (if alerts exist)
+      - Evidence section (if images present)
+      - Footer with timestamp
+  [ ] Statistics are accurate:
+      - Total students matches input
+      - Alert count is correct
+      - Average confidence is reasonable
+  [ ] Images embedded correctly:
+      - No missing image errors (should be handled gracefully)
+      - Images are readable
+      - Timestamps visible
+  [ ] Formatting professional:
+      - Text is readable
+      - Tables are formatted
+      - No corruption or artifacts
+
+Email Quality:
+  [ ] Email received correctly
+  [ ] Subject line is professional
+  [ ] Body contains proper formatting
+  [ ] PDF attachment included
+  [ ] Attachment can be opened
+  [ ] No authentication errors
+
+Alert Collection Quality:
+  [ ] All detections logged
+  [ ] Correct student IDs
+  [ ] Correct behavior types
+  [ ] Confidence scores accurate
+  [ ] Timestamps correct
+  [ ] Image paths valid
+
+═══════════════════════════════════════════════════════════════════════════════
+ PHASE 5: PRODUCTION READINESS (15 MINUTES)
+═══════════════════════════════════════════════════════════════════════════════
+
+File Organization:
+  [ ] Main code files organized
+  [ ] Documentation in accessible location
+  [ ] Backups created (optional):
+      - archived_reports/ folder ready
+      - Backup plan documented
+  [ ] Configuration backed up:
+      - email_config.txt in safe location
+      - Note: Don't commit to git!
+
+Documentation:
+  [ ] All documentation files present:
+      - README_REPORTS_EMAIL.md
+      - REPORT_EMAIL_INTEGRATION.py
+      - MAIN_INTEGRATION_TEMPLATE.py
+      - Quick reference available
+  [ ] Users know where to find help
+  [ ] Troubleshooting guide accessible
+
+Performance Verified:
+  [ ] Alert logging: <1ms per alert (acceptable)
+  [ ] Report generation: 2-5 seconds (acceptable)
+  [ ] Email sending: 5-15 seconds (acceptable)
+  [ ] Memory usage: <100MB for typical session (acceptable)
+  [ ] No memory leaks observed
+
+Security Checklist:
+  [ ] email_config.txt is secure:
+      - Not in public location
+      - Not accessible to unauthorized users
+  [ ] Gmail App Password secure:
+      - Not hardcoded in any Python files
+      - Not logged in console output
+      - Only in email_config.txt
+  [ ] No sensitive data in logs:
+      - No passwords stored
+      - Student IDs only (expected)
+  [ ] File permissions correct:
+      - Reports directory writable
+      - Logs directory writable
+      - Evidence directory writable
+
+═══════════════════════════════════════════════════════════════════════════════
+ PHASE 6: DEPLOYMENT (ONGOING)
+═══════════════════════════════════════════════════════════════════════════════
+
+Daily Use:
+  [ ] Start: python main.py
+  [ ] Monitor: System logs alerts in real-time
+  [ ] Stop: Press ESC
+  [ ] Report: Auto-generates and emails
+  [ ] Verify: Email received successfully
+  [ ] Archive: Save reports to backed_up location (manual or automatic)
+
+Maintenance:
+  [ ] Monitor performance:
+      - Check report generation time
+      - Watch for email errors
+      - Monitor disk space usage
+  [ ] Manage reports:
+      - Archive old reports regularly
+      - Delete test reports
+      - Keep only essential reports
+  [ ] Monitor email quota:
+      - Gmail send limits
+      - SMTP connection limits
+  [ ] Watch system logs:
+      - Any error messages
+      - Any connection issues
+      - Alert collection completeness
+
+Troubleshooting Log:
+  Issue: _______________________________________
+  Date: _______________________________________
+  Solution: _____________________________________
+  
+  Issue: _______________________________________
+  Date: _______________________________________
+  Solution: _____________________________________
+
+═══════════════════════════════════════════════════════════════════════════════
+ TESTING RESULTS
+═══════════════════════════════════════════════════════════════════════════════
+
+Test Session 1:
+  Date: ___________________
+  Duration: ___________________
+  Alerts: ___________________
+  Report Generated: [ ] Yes [ ] No
+  Email Sent: [ ] Yes [ ] No
+  Issues: ___________________
+
+Test Session 2:
+  Date: ___________________
+  Duration: ___________________
+  Alerts: ___________________
+  Report Generated: [ ] Yes [ ] No
+  Email Sent: [ ] Yes [ ] No
+  Issues: ___________________
+
+Test Session 3:
+  Date: ___________________
+  Duration: ___________________
+  Alerts: ___________________
+  Report Generated: [ ] Yes [ ] No
+  Email Sent: [ ] Yes [ ] No
+  Issues: ___________________
+
+═══════════════════════════════════════════════════════════════════════════════
+ DEPLOYMENT SIGN-OFF
+═══════════════════════════════════════════════════════════════════════════════
+
+System Ready for Production:  [ ] YES [ ] NO
+
+If NO, reason: ____________________________________________________________
+
+Testing Complete:           [ ] YES [ ] NO
+All Issues Resolved:        [ ] YES [ ] NO
+Documentation Complete:     [ ] YES [ ] NO
+Email Setup Verified:       [ ] YES [ ] NO
+Performance Acceptable:     [ ] YES [ ] NO
+Security Verified:          [ ] YES [ ] NO
+
+Deployed Date: _____________________
+Deployed By: _____________________
+Approved By: _____________________
+
+Notes: _________________________________________________________________
+_________________________________________________________________________
+_________________________________________________________________________
+
+═══════════════════════════════════════════════════════════════════════════════
+ QUICK REFERENCE COMMANDS
+═══════════════════════════════════════════════════════════════════════════════
+
+Setup (One Time):
+  python setup_wizard.py
+
+Quick Reference:
+  python QUICK_REFERENCE.py
+
+File Index:
+  python FILE_INDEX.py
+
+Start Monitoring:
+  python main.py
+
+Setup Email (If Not Done In Wizard):
+  python -c "from email_sender import interactive_setup; interactive_setup()"
+
+═══════════════════════════════════════════════════════════════════════════════
+ SUPPORT CONTACTS & RESOURCES
+═══════════════════════════════════════════════════════════════════════════════
+
+Documentation:
+  README_REPORTS_EMAIL.md - Main user guide
+  REPORT_EMAIL_INTEGRATION.py - Technical reference
+  MAIN_INTEGRATION_TEMPLATE.py - Code examples
+
+Help:
+  Email Setup Issues: Check email_config.txt and Gmail App Password
+  Report Generation Issues: Check reportlab installed
+  Alert Logging Issues: Check alert_logger.add_alert() calls in main.py
+
+Emergency Contacts:
+  ___________________________
+  ___________________________
+  ___________________________
+
+═══════════════════════════════════════════════════════════════════════════════
+
+NOTES:
+__________________________________________________________________________
+__________________________________________________________________________
+__________________________________________________________________________
+__________________________________________________________________________
+
+═══════════════════════════════════════════════════════════════════════════════
+
+This checklist must be completed before production deployment.
+Print a copy and keep it on your desk for reference.
+Update with dates and sign off when each phase is complete.
+
+═══════════════════════════════════════════════════════════════════════════════

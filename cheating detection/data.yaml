@@ -1,0 +1,12 @@
+path: /kaggle/input/yolo-exam-cheating  # root directory jisme images/ aur labels/ hon
+
+train: images/train           # images ke liye subfolder
+val: images/val               # validation images
+
+nc: 4                         # total class count
+names:
+  0: leaning to copy
+  1: looking around
+  2: sharing answers
+  3: using mobile
+

@@ -1,0 +1,379 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                  ✅ INSTALLATION CHECKLIST FOR TEAMMATE                     ║
+║                                                                              ║
+║              Step-by-Step Setup Verification Document                      ║
+║                                                                              ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+TEAMMATE NAME: ____________________________
+SETUP DATE: ____________________________
+LAPTOP BRAND/MODEL: ____________________________
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PHASE 1: INITIAL CHECKS (Before Starting)
+═══════════════════════════════════════════════════════════════════════════════
+
+[ ] Windows 10 or newer installed
+    Verify: Settings → System → About
+    
+[ ] Internet connection working
+    Verify: Open browser, visit google.com
+    
+[ ] Webcam connected and working
+    Verify: Settings → Privacy → Camera → Allow camera
+    
+[ ] At least 1GB free disk space
+    Verify: Right-click C: drive → Properties
+    
+[ ] Gmail account available (with 2FA capable)
+    Verify: Can login to Gmail
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PHASE 2: PYTHON INSTALLATION
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 2.1: Download Python
+─────────────────────────────────────────────────────────────────────────────
+[ ] Visited https://www.python.org/downloads/
+[ ] Downloaded Python 3.10 (NOT 3.11 or 3.12)
+[ ] File saved: python-3.10.x-amd64.exe
+
+STEP 2.2: Install Python
+─────────────────────────────────────────────────────────────────────────────
+[ ] Opened installer
+[ ] ⚠️  CHECKED "Add Python to PATH" (CRITICAL!)
+[ ] Clicked "Install Now"
+[ ] Installation completed without errors
+[ ] Closed installer
+
+STEP 2.3: Verify Python Installation
+─────────────────────────────────────────────────────────────────────────────
+[ ] Opened PowerShell (Windows + R, type "powershell", press Enter)
+[ ] Ran: python --version
+[ ] Output shows: Python 3.10.x (✓ if yes)
+    If NOT: Go back to Step 2.2, reinstall with PATH checkbox
+
+STEP 2.4: Update pip
+─────────────────────────────────────────────────────────────────────────────
+[ ] In PowerShell, ran: python -m pip install --upgrade pip
+[ ] Completed without errors
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PHASE 3: PROJECT EXTRACTION
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 3.1: Extract ZIP File
+─────────────────────────────────────────────────────────────────────────────
+[ ] Located: mini_project.zip
+[ ] Right-clicked on ZIP
+[ ] Selected: Extract All
+[ ] Chose location: C:\Users\YourName\Desktop\mini_project
+   (Or another location, note the path: __________________)
+[ ] Extraction completed
+
+STEP 3.2: Verify Extraction
+─────────────────────────────────────────────────────────────────────────────
+[ ] Opened folder: C:\Users\YourName\Desktop\mini_project
+[ ] Verified these files exist:
+    [ ] main.py
+    [ ] alert_logger.py
+    [ ] email_sender.py
+    [ ] setup_wizard.py
+    [ ] report_generator.py
+    [ ] api_server.py
+    
+[ ] Verified these folders exist:
+    [ ] agents/
+    [ ] alerts/
+    [ ] config/
+    [ ] dashboard/
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PHASE 4: AUTOMATED SETUP (Using Batch/PowerShell Script)
+═══════════════════════════════════════════════════════════════════════════════
+
+EASY METHOD - Use Automated Script (RECOMMENDED):
+─────────────────────────────────────────────────────────────────────────────
+
+Option A: Windows Batch File (Easier)
+[ ] Opened PowerShell in project folder
+[ ] Right-clicked SETUP.bat
+[ ] Selected "Run with PowerShell"
+[ ] Script started and showed [1/5], [2/5], etc.
+[ ] Waited for all steps to complete (5-10 minutes)
+[ ] Saw "✅ SETUP COMPLETE!" message
+[ ] Script asked to "Press Enter to exit"
+
+Option B: PowerShell Script
+[ ] Opened PowerShell in project folder
+[ ] Right-clicked SETUP.ps1
+[ ] Selected "Run with PowerShell"
+[ ] If security warning appears: Type "Y" and press Enter
+[ ] Script started and showed [1/5], [2/5], etc.
+[ ] Waited for all steps to complete (5-10 minutes)
+[ ] Saw "✅ SETUP COMPLETE!" message
+
+After Automated Setup:
+[ ] PowerShell showed: ✅ All packages installed successfully
+[ ] PowerShell showed: ✅ READY FOR DEPLOYMENT
+[ ] No ❌ errors in output
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PHASE 5: MANUAL SETUP (If Automated Failed)
+═══════════════════════════════════════════════════════════════════════════════
+
+SKIP THIS PHASE IF AUTOMATED SETUP WORKED!
+
+STEP 5.1: Open PowerShell in Project Folder
+─────────────────────────────────────────────────────────────────────────────
+[ ] Navigated to: C:\Users\YourName\Desktop\mini_project
+[ ] Opened PowerShell here (Shift + Right-click → Open PowerShell here)
+[ ] Verified prompt shows: PS C:\Users\...\mini_project>
+
+STEP 5.2: Create Virtual Environment
+─────────────────────────────────────────────────────────────────────────────
+[ ] Ran command: python -m venv .venv
+[ ] Waited for completion (1-2 minutes)
+[ ] Verified: .venv folder created
+[ ] Verified: .venv\Scripts\ folder exists
+
+STEP 5.3: Activate Virtual Environment
+─────────────────────────────────────────────────────────────────────────────
+[ ] Ran command: .\.venv\Scripts\Activate.ps1
+[ ] If security error: Ran: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
+[ ] Verified: PowerShell prompt now starts with "(.venv)"
+    Should show: (.venv) PS C:\Users\...\mini_project>
+
+STEP 5.4: Upgrade pip
+─────────────────────────────────────────────────────────────────────────────
+[ ] Ran command: python -m pip install --upgrade pip
+[ ] Waited for completion
+[ ] No errors shown
+
+STEP 5.5: Install All Packages
+─────────────────────────────────────────────────────────────────────────────
+[ ] Ran command: pip install -r requirements.txt
+[ ] OR Ran: pip install reportlab opencv-python opencv-contrib-python numpy mediapipe flask pyyaml pillow
+[ ] Waited 5-10 minutes for installation
+[ ] Saw: "Successfully installed ..." messages
+[ ] Verified all these packages installed:
+    [ ] reportlab
+    [ ] opencv-python
+    [ ] numpy
+    [ ] mediapipe
+    [ ] flask
+    [ ] pyyaml
+    [ ] pillow
+
+STEP 5.6: Create Directories
+─────────────────────────────────────────────────────────────────────────────
+[ ] Ran commands:
+    mkdir logs
+    mkdir reports
+    mkdir evidence
+    mkdir archived_reports
+[ ] Verified all folders created
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PHASE 6: SYSTEM VERIFICATION
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 6.1: Run System Status Check
+─────────────────────────────────────────────────────────────────────────────
+[ ] Made sure (.venv) is showing in PowerShell
+[ ] Ran command: python SYSTEM_STATUS.py
+[ ] Saw output showing:
+    [ ] ✅ All required files
+    [ ] ✅ reportlab installed
+    [ ] ✅ READY FOR DEPLOYMENT
+
+STEP 6.2: Verify Package Installation
+─────────────────────────────────────────────────────────────────────────────
+[ ] Ran command: pip list
+[ ] Verified output includes:
+    [ ] reportlab
+    [ ] opencv-python
+    [ ] numpy
+    [ ] mediapipe
+    [ ] flask
+    [ ] pyyaml
+    [ ] Pillow
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PHASE 7: EMAIL CONFIGURATION
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️  IMPORTANT: This requires Gmail account with 2FA enabled!
+
+STEP 7.1: Enable 2-Factor Authentication (One Time Per Gmail Account)
+─────────────────────────────────────────────────────────────────────────────
+[ ] Went to: https://myaccount.google.com/security
+[ ] Logged in to Gmail account
+[ ] Found "2-Step Verification" section
+[ ] Clicked "Get Started"
+[ ] Verified phone number with code
+[ ] Completed 2FA setup
+[ ] Gmail now shows 2FA enabled: Yes
+
+STEP 7.2: Generate Gmail App Password
+─────────────────────────────────────────────────────────────────────────────
+[ ] Went to: https://myaccount.google.com/apppasswords
+[ ] Selected "Mail" from first dropdown
+[ ] Selected "Windows Computer" from second dropdown
+[ ] Clicked "Generate"
+[ ] Google showed 16-character password: xxxx xxxx xxxx xxxx
+[ ] COPIED the password to secure location
+    App Password saved: ____________________
+
+⚠️  IMPORTANT: This is NOT your Gmail password! Keep it safe!
+
+STEP 7.3: Run Email Setup Wizard
+─────────────────────────────────────────────────────────────────────────────
+[ ] Made sure (.venv) is activated
+[ ] Ran command: python setup_wizard.py
+[ ] Script started showing: "🚀 AI SURVEILLANCE EMAIL SETUP"
+[ ] Pressed Enter to continue setup
+[ ] When asked "Install missing packages": Typed "n" (packages already installed)
+[ ] When asked "Setup email now": Typed "y"
+[ ] Entered Gmail address: ____________________
+[ ] Pasted 16-character App Password (with spaces)
+[ ] Entered recipient email: ____________________
+[ ] Script tested SMTP connection
+[ ] Saw message: "✅ Email configured for: ___@gmail.com"
+
+STEP 7.4: Verify Email Configuration
+─────────────────────────────────────────────────────────────────────────────
+[ ] File email_config.txt exists in project folder
+[ ] Opened email_config.txt (with Notepad)
+[ ] Verified it contains:
+    SENDER_EMAIL=your@gmail.com
+    APP_PASSWORD=xxxx xxxx xxxx xxxx
+    RECIPIENT_EMAIL=recipient@email.com
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PHASE 8: FIRST RUN TEST
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 8.1: Start Monitoring
+─────────────────────────────────────────────────────────────────────────────
+[ ] Made sure (.venv) is activated
+[ ] Ran command: python main.py
+[ ] Waited 5 seconds for program to start
+[ ] Saw: Camera window opened showing webcam feed
+[ ] Saw: Student tracking and FPS counter in top-left
+
+STEP 8.2: Test Monitoring (30 seconds)
+─────────────────────────────────────────────────────────────────────────────
+[ ] Let program run for 30 seconds
+[ ] Watched for any student detections
+[ ] Verified: No error messages
+[ ] Verified: Camera feed is live
+
+STEP 8.3: Stop Monitoring
+─────────────────────────────────────────────────────────────────────────────
+[ ] Pressed: ESC key
+[ ] Waited 5 seconds for program to process
+[ ] Saw messages in console:
+    [ ] "Generating PDF report..."
+    [ ] "Connecting to smtp.gmail.com..."
+    [ ] "Email sent to..."
+
+STEP 8.4: Verify Report Generation
+─────────────────────────────────────────────────────────────────────────────
+[ ] Opened: reports/ folder
+[ ] Verified: surveillance_report_YYYYMMDD_HHMMSS.pdf exists
+[ ] Opened PDF file
+[ ] Verified PDF contains:
+    [ ] Header with title and date
+    [ ] Summary statistics
+    [ ] Professional formatting
+
+STEP 8.5: Verify Email Sent
+─────────────────────────────────────────────────────────────────────────────
+[ ] Checked email inbox (recipient email)
+[ ] Verified: Email received from sender email
+[ ] Verified: Subject contains "AI Exam Surveillance Report"
+[ ] Opened: PDF attachment from email
+[ ] Verified: PDF opens correctly
+
+STEP 8.6: Verify Logs Cleared
+─────────────────────────────────────────────────────────────────────────────
+[ ] Opened: logs/current_session.json
+[ ] Verified: File is empty or cleared (ready for next session)
+[ ] System ready for next monitoring session
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PHASE 9: TROUBLESHOOTING (IF NEEDED)
+═══════════════════════════════════════════════════════════════════════════════
+
+If any of the above steps FAILED, note the issue:
+
+ISSUE: __________________________________________________________________
+STEP WHERE FAILED: __________________________________________________________________
+ERROR MESSAGE: __________________________________________________________________
+SOLUTION ATTEMPTED: __________________________________________________________________
+RESOLVED: [ ] YES [ ] NO
+
+
+═══════════════════════════════════════════════════════════════════════════════
+FINAL STATUS
+═══════════════════════════════════════════════════════════════════════════════
+
+SETUP STATUS:
+[ ] ✅ All steps completed successfully
+[ ] ⚠️  Some steps completed, need review
+[ ] ❌ Setup failed, see troubleshooting notes
+
+SYSTEM READY FOR USE:
+[ ] ✅ Yes, ready for production use
+[ ] ⏳ Partially ready, needs troubleshooting
+[ ] ❌ Not ready, requires support
+
+SIGN-OFF:
+Teammate Name: ____________________________
+Date Completed: ____________________________
+Issues Encountered: ____________________________
+Support Contact: ____________________________
+
+
+═══════════════════════════════════════════════════════════════════════════════
+IMPORTANT REMINDERS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. EVERY TIME YOU OPEN POWERSHELL:
+   Remember to activate virtual environment first:
+   .\.venv\Scripts\Activate.ps1
+
+2. KEEP EMAIL CREDENTIALS SECURE:
+   email_config.txt should NOT be shared or committed to version control
+
+3. FOR HELP:
+   • Check: README_REPORTS_EMAIL.md
+   • Check: QUICK_REFERENCE.py
+   • Run: python SYSTEM_STATUS.py (to diagnose)
+
+4. COMMON COMMANDS:
+   • Start: python main.py
+   • Quick Ref: python QUICK_REFERENCE.py
+   • Check Status: python SYSTEM_STATUS.py
+   • Reconfig Email: python setup_wizard.py
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ SETUP COMPLETE!
+
+Your AI Exam Surveillance System is ready to use. 
+Good luck with your project! 🚀
+
+═══════════════════════════════════════════════════════════════════════════════

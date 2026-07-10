@@ -1,0 +1,141 @@
+version: '3.8'
+
+services:
+  # ==================== EDGE AI SERVER ====================
+  edge-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: surveillance-edge-ai
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
+      - API_PORT=8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    ports:
+      - "8000:8000"  # FastAPI
+      - "8001:8001"  # WebRTC
+      - "8002:8002"  # WebSocket
+    volumes:
+      - ./logs:/app/logs
+      - ./evidence:/app/evidence
+      - ./models:/app/models
+      - /dev/shm:/dev/shm  # Shared memory for IPC
+    networks:
+      - surveillance-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          cpus: '8'
+          memory: 16G
+      placement:
+        constraints:
+          - node.role == manager
+  
+  # ==================== POSTGRESQL DATABASE ====================
+  postgres:
+    image: postgres:15-alpine
+    container_name: surveillance-postgres
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    networks:
+      - surveillance-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  # ==================== REDIS CACHE ====================
+  redis:
+    image: redis:7-alpine
+    container_name: surveillance-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - surveillance-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+  
+  # ==================== PGADMIN (Development Only) ====================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: surveillance-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@surveillance.local
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    ports:
+      - "5050:80"
+    networks:
+      - surveillance-net
+    restart: unless-stopped
+    profiles:
+      - dev
+  
+  # ==================== NGINX REVERSE PROXY ====================
+  nginx:
+    image: nginx:alpine
+    container_name: surveillance-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - surveillance-net
+    depends_on:
+      - edge-ai
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  surveillance-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+# Example environment variables (.env file)
+# DB_NAME=surveillance
+# DB_USER=postgres
+# DB_PASSWORD=your_secure_password
+# PGADMIN_PASSWORD=admin_password
+# GEMINI_API_KEY=your_api_key
+# API_WORKERS=4
+# LOG_LEVEL=INFO

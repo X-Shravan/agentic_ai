@@ -1,0 +1,12 @@
+train: images/train
+val: images/val
+test: images/test
+
+nc: 5
+
+names:
+  0: calculator
+  1: leaning_to_copy
+  2: looking_around
+  3: sharing_answers
+  4: using_mobile

@@ -1,0 +1,442 @@
+# ================================================================
+# SYSTEM CONFIGURATION TEMPLATE
+# Copy this to config.yaml and customize for your setup
+# ================================================================
+
+# ================================================================
+# SURVEILLANCE CONFIGURATION
+# ================================================================
+
+surveillance:
+  # Total number of students in exam
+  total_students: 30
+  
+  # Camera/video source (0 for webcam, or path to video file)
+  video_source: 0
+  
+  # Display resolution
+  display_width: 1280
+  display_height: 720
+  
+  # FPS cap (0 for unlimited)
+  fps_cap: 30
+  
+  # Enable display window
+  show_display: true
+  
+  # Enable full-screen display
+  fullscreen: false
+
+
+# ================================================================
+# ALERT LOGGING CONFIGURATION
+# ================================================================
+
+alert_logging:
+  # Directory for storing alert logs
+  log_directory: "logs"
+  
+  # Log file name for current session
+  log_filename: "current_session.json"
+  
+  # Auto-clear logs after successful email
+  auto_clear_after_email: true
+  
+  # Enable debug logging
+  debug_mode: false
+  
+  # Maximum alerts to keep in memory (0 for unlimited)
+  max_alerts_memory: 0
+
+
+# ================================================================
+# REPORT GENERATION CONFIGURATION
+# ================================================================
+
+report_generation:
+  # Directory for saving PDF reports
+  output_directory: "reports"
+  
+  # Include system info in header
+  include_system_info: true
+  
+  # Maximum alerts to show in table
+  max_alerts_in_table: 20
+  
+  # Maximum evidence images to include
+  max_evidence_images: 10
+  
+  # Image width in inches
+  image_width: 6
+  
+  # Image height in inches
+  image_height: 4.5
+  
+  # Page breaks after this many images
+  page_break_interval: 3
+  
+  # Include performance metrics
+  include_metrics: true
+  
+  # Color-code alerts by priority
+  color_code_alerts: true
+
+
+# ================================================================
+# EMAIL CONFIGURATION
+# ================================================================
+
+email:
+  # Gmail SMTP server
+  smtp_server: "smtp.gmail.com"
+  
+  # SMTP port (587 for TLS)
+  smtp_port: 587
+  
+  # Enable TLS encryption
+  use_tls: true
+  
+  # Email subject
+  email_subject: "🎓 AI Exam Surveillance Report"
+  
+  # Include system info in email
+  include_system_info: true
+  
+  # Retry failed sends (how many times)
+  retry_attempts: 3
+  
+  # Delay between retries (seconds)
+  retry_delay: 5
+  
+  # Timeout for email send (seconds)
+  connection_timeout: 30
+  
+  # Default body template (can be overridden)
+  default_body: |
+    Dear Administrator,
+    
+    Please find attached the AI Exam Surveillance Report.
+    
+    This report contains:
+    • Session summary statistics
+    • Detailed alert information
+    • Evidence images for suspicious activities
+    
+    Best regards,
+    AI Exam Surveillance System
+
+
+# ================================================================
+# BEHAVIOR DETECTION CONFIGURATION
+# ================================================================
+
+detection:
+  # Mobile detection threshold
+  mobile_confidence_threshold: 0.55
+  mobile_area_threshold: 5000
+  
+  # Looking around thresholds
+  look_around_yaw_threshold: 18  # degrees
+  look_around_count_threshold: 3
+  
+  # Looking to copy thresholds
+  look_to_copy_pitch_threshold: 12  # degrees
+  look_to_copy_yaw_threshold: 8     # degrees
+  look_to_copy_count_threshold: 3
+  
+  # Leaning thresholds
+  lean_shoulder_diff_threshold: 0.08
+  lean_frame_threshold: 15
+  
+  # Counter decay (gradual reset if behavior stops)
+  enable_counter_decay: true
+  decay_rate: 1  # Reduce counter by this each frame without detection
+  
+  # Confidence smoothing (reduce sudden spikes)
+  smooth_confidence: true
+  smoothing_window: 3
+
+
+# ================================================================
+# EVIDENCE CAPTURE CONFIGURATION
+# ================================================================
+
+evidence_capture:
+  # Directory for storing evidence images
+  evidence_directory: "evidence"
+  
+  # Save evidence when alert triggered
+  save_on_alert: true
+  
+  # Save evidence when status changes
+  save_on_status_change: false
+  
+  # Image quality (1-100)
+  image_quality: 90
+  
+  # Image format (jpg, png)
+  image_format: "jpg"
+  
+  # Include metadata on image
+  include_metadata: true
+  
+  # Metadata font size
+  metadata_font_size: 16
+  
+  # Archive old evidence (days)
+  archive_after_days: 30
+  
+  # Maximum evidence directory size (MB)
+  max_directory_size: 1000
+
+
+# ================================================================
+# TRACKING CONFIGURATION
+# ================================================================
+
+tracking:
+  # Distance threshold for tracking (pixels)
+  distance_threshold: 120
+  
+  # Confidence threshold for accepting detection
+  confidence_threshold: 0.55
+  
+  # Maximum frames to track without detection
+  max_missing_frames: 30
+  
+  # Enable re-identification of lost students
+  enable_reidentification: true
+
+
+# ================================================================
+# DATABASE CONFIGURATION (Optional)
+# ================================================================
+
+database:
+  # Enable database logging
+  enabled: false
+  
+  # Database type (sqlite, mysql, postgresql)
+  type: "sqlite"
+  
+  # Database location/connection string
+  connection: "surveillance.db"
+  
+  # Auto-backup interval (hours)
+  backup_interval: 24
+
+
+# ================================================================
+# PERFORMANCE TUNING
+# ================================================================
+
+performance:
+  # Enable GPU acceleration (if available)
+  use_gpu: true
+  
+  # Number of processing threads
+  num_threads: 4
+  
+  # Memory limit (MB)
+  memory_limit: 4096
+  
+  # CPU affinity (CPU cores to use, -1 for all)
+  cpu_affinity: -1
+  
+  # Frame skip for analysis (analyze every Nth frame)
+  frame_skip: 1
+
+
+# ================================================================
+# LOGGING & DEBUG
+# ================================================================
+
+logging:
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  level: "INFO"
+  
+  # Log to file
+  log_to_file: true
+  
+  # Log file path
+  log_file: "surveillance.log"
+  
+  # Maximum log file size (MB)
+  max_log_size: 100
+  
+  # Keep this many backup logs
+  backup_count: 5
+  
+  # Console output
+  console_output: true
+
+
+# ================================================================
+# SECURITY & PRIVACY
+# ================================================================
+
+security:
+  # Anonymize student IDs in reports
+  anonymize_ids: false
+  
+  # Blur faces in evidence images
+  blur_faces: false
+  
+  # Encrypt stored logs
+  encrypt_logs: false
+  
+  # Audit trail (log all actions)
+  audit_trail: true
+  
+  # Session timeout (minutes, 0 = unlimited)
+  session_timeout: 0
+
+
+# ================================================================
+# ALERTS & NOTIFICATIONS
+# ================================================================
+
+alerts:
+  # Play sound on alert
+  play_sound: true
+  
+  # Sound file path
+  sound_file: "alert.wav"
+  
+  # Show desktop notification
+  show_notification: true
+  
+  # Alert cooldown (seconds between same alert from same student)
+  cooldown_period: 5
+  
+  # Alert severity levels
+  severity_levels:
+    critical: ["Mobile"]
+    high: ["Looking to Copy"]
+    medium: ["Looking Around", "Leaning"]
+    low: []
+
+
+# ================================================================
+# UI/DISPLAY CONFIGURATION
+# ================================================================
+
+display:
+  # Display theme (light, dark)
+  theme: "dark"
+  
+  # Color scheme
+  colors:
+    alert: [0, 0, 255]        # Red (BGR)
+    warning: [0, 165, 255]    # Orange
+    normal: [0, 255, 0]       # Green
+    info: [255, 0, 0]         # Blue
+  
+  # Font
+  font: "Arial"
+  font_size: 12
+  
+  # Show FPS counter
+  show_fps: true
+  
+  # Show debug info
+  show_debug_info: false
+  
+  # Statistics display position (top-left, top-right, bottom-left, bottom-right)
+  stats_position: "bottom-left"
+
+
+# ================================================================
+# EXPORT & BACKUP
+# ================================================================
+
+export:
+  # Export format (json, csv, xml)
+  format: "json"
+  
+  # Auto-export after session
+  auto_export: false
+  
+  # Export directory
+  export_directory: "exports"
+  
+  # Backup directory
+  backup_directory: "backups"
+  
+  # Backup frequency (hours)
+  backup_frequency: 24
+  
+  # Retention policy (days)
+  retention_days: 90
+
+
+# ================================================================
+# INTEGRATION APIs
+# ================================================================
+
+api:
+  # Enable REST API
+  enabled: true
+  
+  # API host
+  host: "localhost"
+  
+  # API port
+  port: 5000
+  
+  # Enable CORS
+  cors_enabled: true
+  
+  # Allowed origins
+  allowed_origins: ["*"]
+  
+  # API timeout (seconds)
+  timeout: 30
+  
+  # Rate limiting (requests per minute)
+  rate_limit: 100
+
+
+# ================================================================
+# SCHEDULED TASKS
+# ================================================================
+
+scheduling:
+  # Enable scheduled tasks
+  enabled: false
+  
+  # Daily report generation time (HH:MM)
+  daily_report_time: "17:00"
+  
+  # Weekly archive day (0=Monday, 6=Sunday)
+  weekly_archive_day: 5
+  
+  # Weekly archive time (HH:MM)
+  weekly_archive_time: "18:00"
+  
+  # Auto-clean old logs (days)
+  auto_clean_logs: 30
+  
+  # Auto-backup frequency (hours)
+  auto_backup_frequency: 6
+
+
+# ================================================================
+# ADVANCED OPTIONS
+# ================================================================
+
+advanced:
+  # Enable experimental features
+  experimental: false
+  
+  # Debug mode
+  debug: false
+  
+  # Verbose output
+  verbose: false
+  
+  # Custom model path
+  custom_model_path: null
+  
+  # Custom config overrides
+  custom_overrides: {}

@@ -1,0 +1,53 @@
+# ============================================================
+# SIMPLIFIED REQUIREMENTS - Python 3.11.9
+# Enterprise Surveillance System - Flask Backend
+# ============================================================
+
+# Core Vision & Media
+opencv-python==4.8.1.78
+opencv-contrib-python==4.8.1.78
+mediapipe==0.10.33
+Pillow==10.0.0
+
+# YOLO Detection & PyTorch (CPU)
+ultralytics==8.0.189
+torch==2.1.0
+torchvision==0.16.0
+numpy==1.24.3
+
+# Flask Web Server (Main)
+Flask==3.0.0
+flask-cors==4.0.0
+flask-socketio==5.3.5
+python-socketio==5.9.0
+python-engineio==4.8.0
+
+# Async & Real-time Communication
+websockets==12.0
+aiofiles==23.2.1
+
+# HTTP & API
+requests==2.31.0
+
+# Configuration
+pyyaml==6.0.1
+python-dotenv==1.0.0
+python-dateutil==2.8.2
+
+# System Utilities
+psutil==5.9.6
+sortedcontainers==2.4.0
+
+# Reports
+reportlab==4.0.7
+
+# ============================================================
+# NOTES:
+# - Removed: av, aiortc (causing Cython build errors)
+# - Flask-SocketIO handles video streaming natively
+# - For advanced WebRTC, install separately: pip install aiortc
+#
+# INSTALLATION:
+#   pip install -r requirements-enterprise.txt
+#
+# ============================================================

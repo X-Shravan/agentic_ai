@@ -1,0 +1,491 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║               🚀 COMPLETE SETUP GUIDE FOR NEW TEAMMATE                      ║
+║                                                                              ║
+║        AI Exam Surveillance System with Report & Email Integration         ║
+║                                                                              ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+📋 TABLE OF CONTENTS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. System Requirements
+2. Python Setup
+3. Project Extraction
+4. Dependencies Installation
+5. Email Configuration
+6. Project Verification
+7. Running the System
+8. Troubleshooting
+9. Important Files Reference
+
+
+═══════════════════════════════════════════════════════════════════════════════
+1️⃣  SYSTEM REQUIREMENTS
+═══════════════════════════════════════════════════════════════════════════════
+
+HARDWARE:
+  • Laptop/PC with Windows 10 or newer
+  • At least 4GB RAM (8GB recommended)
+  • 1GB free disk space
+  • Webcam (for surveillance)
+
+SOFTWARE:
+  • Windows PowerShell (built-in)
+  • Internet connection (for installations and Gmail)
+  • Gmail account with 2FA enabled
+
+
+═══════════════════════════════════════════════════════════════════════════════
+2️⃣  PYTHON SETUP
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 2.1: Download Python
+─────────────────────────────────────────────────────────────────────────────
+1. Go to: https://www.python.org/downloads/
+2. Download: Python 3.10 (click the big yellow button)
+   IMPORTANT: Make sure it says "Python 3.10" NOT 3.11 or 3.12
+3. Run the installer
+4. ⚠️  CRITICAL: Check "Add Python to PATH" (bottom checkbox)
+5. Click "Install Now"
+6. Wait for installation to complete
+
+Verify Installation:
+─────────────────────────────────────────────────────────────────────────────
+1. Open PowerShell (search "PowerShell" in Windows)
+2. Type: python --version
+3. You should see: Python 3.10.x
+   
+   If you see an error, reinstall Python and CHECK "Add Python to PATH"
+
+
+STEP 2.2: Update pip
+─────────────────────────────────────────────────────────────────────────────
+1. Open PowerShell
+2. Run this command:
+
+   python -m pip install --upgrade pip
+
+3. Wait for it to complete
+
+
+═══════════════════════════════════════════════════════════════════════════════
+3️⃣  PROJECT EXTRACTION
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 3.1: Extract the ZIP file
+─────────────────────────────────────────────────────────────────────────────
+1. Download the project ZIP: "mini_project.zip"
+2. Right-click on the ZIP file
+3. Select: "Extract All"
+4. Choose a location like: C:\Users\YourName\Desktop\mini_project
+5. Complete extraction
+
+STEP 3.2: Open Project in PowerShell
+─────────────────────────────────────────────────────────────────────────────
+1. Open PowerShell
+2. Navigate to project folder:
+
+   cd C:\Users\YourName\Desktop\mini_project
+
+3. Verify project extracted correctly:
+
+   dir
+
+   You should see: alert_logger.py, email_sender.py, main.py, etc.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+4️⃣  DEPENDENCIES INSTALLATION
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 4.1: Create Virtual Environment (RECOMMENDED)
+─────────────────────────────────────────────────────────────────────────────
+This creates an isolated Python environment for this project (best practice).
+
+1. Open PowerShell in project folder
+2. Run:
+
+   python -m venv .venv
+
+3. Wait for "venv" folder to be created (takes 1-2 minutes)
+4. Activate virtual environment:
+
+   .\.venv\Scripts\Activate.ps1
+
+5. You should see "(.venv)" at start of PowerShell line
+   Example: (.venv) PS C:\Users\YourName\Desktop\mini_project>
+
+Note: You must run this activation command EVERY TIME you open PowerShell
+      to work on this project!
+
+
+STEP 4.2: Install All Required Packages
+─────────────────────────────────────────────────────────────────────────────
+1. Make sure you're in project folder and (.venv) is activated
+2. Run this command:
+
+   pip install reportlab opencv-python opencv-contrib-python numpy mediapipe flask pyyaml pillow
+
+3. Wait for all packages to install (takes 5-10 minutes)
+   You should see: "Successfully installed ..." at the end
+
+Full Package List:
+  ✓ reportlab       - PDF report generation
+  ✓ opencv-python   - Computer vision
+  ✓ opencv-contrib  - OpenCV extra modules
+  ✓ numpy           - Numerical computing
+  ✓ mediapipe       - Head pose detection
+  ✓ flask           - Web server
+  ✓ pyyaml          - Configuration
+  ✓ pillow          - Image processing
+
+
+STEP 4.3: Verify Installation
+─────────────────────────────────────────────────────────────────────────────
+Run this to verify all packages installed:
+
+   pip list
+
+You should see all packages listed above with version numbers.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+5️⃣  EMAIL CONFIGURATION (IMPORTANT!)
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 5.1: Enable 2-Factor Authentication on Gmail
+─────────────────────────────────────────────────────────────────────────────
+1. Go to: https://myaccount.google.com/security
+2. Login to your Gmail account
+3. Find "2-Step Verification" section
+4. Click "Get Started"
+5. Verify your phone number
+6. Complete the 2FA setup
+7. Return to security page
+
+
+STEP 5.2: Generate Gmail App Password
+─────────────────────────────────────────────────────────────────────────────
+1. Go to: https://myaccount.google.com/apppasswords
+2. You should see dropdown for "Select app" and "Select device"
+3. Select: "Mail" from first dropdown
+4. Select: "Windows Computer" from second dropdown
+5. Click "Generate"
+6. Google will show a 16-character password like: xxxx xxxx xxxx xxxx
+7. COPY THIS PASSWORD (you'll need it in next step)
+
+⚠️  IMPORTANT: This is NOT your Gmail password! It's different!
+
+
+STEP 5.3: Run Email Setup Wizard
+─────────────────────────────────────────────────────────────────────────────
+1. Open PowerShell in project folder
+2. Make sure (.venv) is activated
+3. Run:
+
+   python setup_wizard.py
+
+4. Follow the prompts:
+   - When asked to continue: Type "y" and press Enter
+   - For "Install missing packages": Type "n" (they're already installed)
+   - For "Setup email": Type "y"
+   - Enter your Gmail address (e.g., your.name@gmail.com)
+   - Enter the 16-character App Password you copied (with spaces)
+   - Enter recipient email (where reports should be sent)
+   - The wizard will test the connection
+
+✅ If successful, you'll see: "Email configured for: your.email@gmail.com"
+
+📁 This creates a file: email_config.txt (auto-generated)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+6️⃣  PROJECT VERIFICATION
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 6.1: Check All Files Present
+─────────────────────────────────────────────────────────────────────────────
+In PowerShell, run:
+
+   dir
+
+Verify these folders exist:
+  ✓ logs/           - Alert logs
+  ✓ reports/        - Generated PDFs
+  ✓ evidence/       - Screenshots
+  ✓ archived_reports/
+  ✓ agents/         - Detection agents
+  ✓ dashboard/      - Web dashboard
+  ✓ config/         - Configuration
+
+Verify these files exist:
+  ✓ main.py         - Main surveillance program
+  ✓ alert_logger.py - Alert collection
+  ✓ email_sender.py - Email delivery
+  ✓ setup_wizard.py - Setup automation
+  ✓ api_server.py   - REST API
+  ✓ email_config.txt - Email credentials (auto-created)
+
+
+STEP 6.2: Run System Check
+─────────────────────────────────────────────────────────────────────────────
+1. Make sure (.venv) is activated
+2. Run:
+
+   python SYSTEM_STATUS.py
+
+3. You should see:
+   ✅ All required files present
+   ✅ reportlab installed
+   ✅ READY FOR DEPLOYMENT
+
+If you see any ❌ errors, go back to Step 4.2 and reinstall packages.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+7️⃣  RUNNING THE SYSTEM
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 7.1: First Time Setup (One Time Only)
+─────────────────────────────────────────────────────────────────────────────
+Already done in Step 5.3! Skip this if setup_wizard.py ran successfully.
+
+
+STEP 7.2: Daily Usage - Start Surveillance
+─────────────────────────────────────────────────────────────────────────────
+Each time you want to run monitoring:
+
+1. Open PowerShell in project folder
+2. Activate virtual environment:
+
+   .\.venv\Scripts\Activate.ps1
+
+3. Start monitoring:
+
+   python main.py
+
+4. You should see:
+   - Camera feed window opens
+   - "Starting surveillance..." message
+   - Real-time student tracking
+
+
+STEP 7.3: Stop Monitoring & Generate Report
+─────────────────────────────────────────────────────────────────────────────
+1. Press ESC key to stop monitoring
+2. Wait 5-15 seconds...
+3. System will automatically:
+   ✓ Generate PDF report
+   ✓ Send via email
+   ✓ Clear logs
+4. Check console for:
+   "✅ Report sent and logs cleared!"
+
+
+STEP 7.4: Check Generated Report
+─────────────────────────────────────────────────────────────────────────────
+1. Go to: reports/ folder in project
+2. You should see: surveillance_report_YYYYMMDD_HHMMSS.pdf
+3. Open in Adobe Reader or any PDF viewer
+4. Check email inbox for email with PDF attachment
+
+
+═══════════════════════════════════════════════════════════════════════════════
+8️⃣  TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+PROBLEM: "Python is not recognized as an internal command"
+─────────────────────────────────────────────────────────────────────────────
+Fix: Python not added to PATH during installation
+  1. Uninstall Python: Settings → Apps → Python
+  2. Reinstall Python from: https://www.python.org/downloads/
+  3. ⚠️  CHECK "Add Python to PATH" checkbox during installation
+
+
+PROBLEM: "(.venv) not showing" in PowerShell
+─────────────────────────────────────────────────────────────────────────────
+Fix: Virtual environment not activated
+  1. In PowerShell, run:
+     
+     .\.venv\Scripts\Activate.ps1
+
+  2. You should see "(.venv)" prefix now
+
+
+PROBLEM: "ModuleNotFoundError: No module named 'reportlab'"
+─────────────────────────────────────────────────────────────────────────────
+Fix: Packages not installed
+  1. Make sure (.venv) is activated
+  2. Run:
+     
+     pip install reportlab
+
+  3. Try again: python main.py
+
+
+PROBLEM: "Email not sending" or "Authentication failed"
+─────────────────────────────────────────────────────────────────────────────
+Fix: Email configuration issue
+  1. Check: Did you use Gmail App Password (NOT regular password)?
+  2. Check: Is 2FA enabled on Gmail?
+  3. Check: email_config.txt exists
+  4. Re-run: python setup_wizard.py
+  5. Follow all prompts again
+
+
+PROBLEM: Camera window doesn't open
+─────────────────────────────────────────────────────────────────────────────
+Fix: No camera connected or permission issue
+  1. Connect webcam to laptop
+  2. Check Windows Settings: Privacy → Camera
+  3. Ensure camera access is enabled
+  4. Try again: python main.py
+
+
+PROBLEM: "FileNotFoundError: logs directory"
+─────────────────────────────────────────────────────────────────────────────
+Fix: Directories not created
+  1. In PowerShell, run:
+     
+     mkdir logs reports evidence archived_reports
+
+  2. Try again: python main.py
+
+
+PROBLEM: Report PDF not generating
+─────────────────────────────────────────────────────────────────────────────
+Fix: Check reportlab installation
+  1. Run:
+     
+     pip install reportlab --force-reinstall
+
+  2. Check reports/ folder has write permissions
+  3. Try again
+
+
+═══════════════════════════════════════════════════════════════════════════════
+9️⃣  IMPORTANT FILES REFERENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+CORE PROGRAM FILES:
+  main.py                      - Main surveillance program
+  api_server.py                - REST API for dashboard
+  agents/detection_agent.py    - YOLO object detection
+  agents/behavior_analysis_agent.py - Behavior analysis
+  agents/tracking_agent.py     - Student tracking
+
+ALERT & REPORTING:
+  alert_logger.py              - Alert collection ⭐
+  email_sender.py              - Email delivery ⭐
+  report_generator.py          - PDF generation ⭐
+  alerts/evidence_capture.py   - Screenshot saving
+
+CONFIGURATION:
+  config/config.yaml           - System configuration
+  config_template.yaml         - Configuration template
+  email_config.txt             - Email credentials (auto-generated)
+
+DOCUMENTATION:
+  README_REPORTS_EMAIL.md      - User guide
+  MAIN_INTEGRATION_TEMPLATE.py - Code reference
+  SETUP_COMPLETE.md            - Setup summary
+  QUICK_REFERENCE.py           - Quick lookup
+  MASTER_CHECKLIST.txt         - Deployment checklist
+
+DATA DIRECTORIES:
+  logs/                        - Alert logs (JSON)
+  reports/                     - Generated PDF reports
+  evidence/                    - Alert screenshots
+  archived_reports/            - Old reports
+
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ QUICK REFERENCE COMMANDS
+═══════════════════════════════════════════════════════════════════════════════
+
+First Time Setup:
+  cd C:\path\to\mini_project
+  python -m venv .venv
+  .\.venv\Scripts\Activate.ps1
+  pip install reportlab opencv-python numpy mediapipe flask pyyaml pillow
+  python setup_wizard.py
+
+Every Time You Start Work:
+  .\.venv\Scripts\Activate.ps1  (activate virtual environment)
+
+Run Surveillance:
+  python main.py
+
+Check System Status:
+  python SYSTEM_STATUS.py
+
+Setup Email (One Time):
+  python setup_wizard.py
+
+Quick Reference:
+  python QUICK_REFERENCE.py
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎓 STEP-BY-STEP SUMMARY FOR TEAMMATE
+═══════════════════════════════════════════════════════════════════════════════
+
+DAY 1 - SETUP (1 hour total):
+
+  [ ] 1. Install Python 3.10 from python.org (ADD TO PATH!)
+  [ ] 2. Extract project ZIP to C:\Users\YourName\Desktop\mini_project
+  [ ] 3. Open PowerShell in that folder
+  [ ] 4. Create virtual environment: python -m venv .venv
+  [ ] 5. Activate: .\.venv\Scripts\Activate.ps1
+  [ ] 6. Install packages: pip install reportlab opencv-python ...
+  [ ] 7. Run: python SYSTEM_STATUS.py (verify everything works)
+  [ ] 8. Setup email: python setup_wizard.py (enter Gmail credentials)
+  [ ] 9. Done! Ready to use.
+
+DAY 2 - FIRST RUN:
+
+  [ ] 1. Open PowerShell in project folder
+  [ ] 2. Activate: .\.venv\Scripts\Activate.ps1
+  [ ] 3. Run: python main.py
+  [ ] 4. Monitor for a minute or two
+  [ ] 5. Press ESC to stop
+  [ ] 6. Wait for report generation
+  [ ] 7. Check email for PDF report
+  [ ] 8. Success! ✅
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📞 SUPPORT DOCUMENTS
+═══════════════════════════════════════════════════════════════════════════════
+
+If teammate needs help, provide:
+
+  1. README_REPORTS_EMAIL.md       - Complete user guide
+  2. MAIN_INTEGRATION_TEMPLATE.py  - How to integrate
+  3. QUICK_REFERENCE.py            - Quick commands
+  4. This file (TEAMMATE_SETUP_GUIDE.txt)
+
+For Technical Questions:
+  • Check REPORT_EMAIL_INTEGRATION.py
+  • Check MASTER_CHECKLIST.txt
+  • Run: python SYSTEM_STATUS.py (to diagnose)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎉 YOU'RE DONE!
+═══════════════════════════════════════════════════════════════════════════════
+
+Your teammate is now ready to:
+  ✅ Run surveillance monitoring
+  ✅ Automatically generate PDF reports
+  ✅ Send reports via email
+  ✅ Manage alert logs
+
+Total setup time: ~1 hour
+Most of that time: Waiting for Python and packages to install
+
+Good luck! 🚀
+
+═══════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,17 @@
+[33mcommit f6aca1b86fc52fafa6d5703f4b3c9f2d7031cebc[m
+Author: anushreekhadgi98 <anushreekhadgi3@gmail.com>
+Date:   Sat Apr 4 18:44:27 2026 +0530
+
+    Added .gitignore and removed large files
+
+ final_dataset.zip | Bin [31m251762155[m -> [32m0[m bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+[33mcommit 4927327b1c0651a90ff9bc249a4aabeb1bc9deff[m
+Author: anushreekhadgi98 <anushreekhadgi3@gmail.com>
+Date:   Sat Apr 4 18:28:55 2026 +0530
+
+    Initial commit
+
+ final_dataset.zip | Bin [31m0[m -> [32m251762155[m bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
