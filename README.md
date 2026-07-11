@@ -1,31 +1,19 @@
-# Agentic AI Smart Exam Surveillance & Alert System
+# AI Exam Surveillance
 
-This project monitors exam halls from CCTV RTSP streams and raises malpractice alerts using a multi-agent AI pipeline.
+Production-oriented Agentic AI Smart Exam Surveillance System using an existing trained YOLO model, FastAPI backend, and React/Next.js-ready frontend.
 
-## Architecture
+## Project layout
 
-CCTV (RTSP)
-↓
-SurveillanceAgent
-↓
-DetectionAgent
-↓
-TrackingAgent
-↓
-RoleClassificationAgent
-↓
-BehaviourAnalysisAgent
-↓
-RiskScoringEngine
-↓
-DecisionAgent
-↓
-AlertManager
+- `frontend/` — dashboard UI assets and client application.
+- `backend/` — FastAPI services, agents, LangGraph workflow, CrewAI configuration, CV modules, risk engine, evidence, and reports.
+- `models/best_exam_model.pt` — required trained custom YOLO model file. Place or rename the provided `best.pt` file here; YOLO is not retrained by this project.
+- `docs/architecture.md`, `docs/deployment.md`, `docs/api.md` — retained documentation.
 
-## Quickstart
+## Model
+
+The detection stack loads `models/best_exam_model.pt` as the primary detection engine. If your local file is named `best.pt`, move it to:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python main.py --config config/config.yaml --demo
+mkdir -p models
+mv best.pt models/best_exam_model.pt
+```
