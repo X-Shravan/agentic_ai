@@ -6,6 +6,8 @@ from typing import List, Tuple
 import cv2
 from ultralytics import YOLO
 
+from backend.core.model_registry import resolve_yolo_model_path
+
 
 # --------------------------------------------------
 # Detection Output
@@ -31,8 +33,9 @@ class DetectionAgent:
 
         print("🚀 YOLO model starting...")
 
-        # ✅ USE OFFICIAL MODEL
-        self.model = YOLO("models/best_exam_model.pt")
+        # ✅ Use the linked local model files from branch/version1 when present.
+        model_path = resolve_yolo_model_path(config)
+        self.model = YOLO(model_path)
 
         print("✅ YOLO model loaded successfully")
 

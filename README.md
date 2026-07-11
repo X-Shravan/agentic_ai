@@ -6,16 +6,17 @@ Production-oriented Agentic AI Smart Exam Surveillance System using an existing 
 
 - `frontend/` — dashboard UI assets and client application.
 - `backend/` — FastAPI services, agents, LangGraph workflow, CrewAI configuration, CV modules, risk engine, evidence, and reports.
-- `models/best_exam_model.pt` — required trained custom YOLO model file. Place or rename the provided `best.pt` file here; YOLO is not retrained by this project.
+- `models/yolo11n.pt` — primary custom trained YOLO model from branch/version1; `models/yolov8n.pt` is supported as the base/fallback model. YOLO is not retrained by this project.
 - `docs/architecture.md`, `docs/deployment.md`, `docs/api.md` — retained documentation.
 
 ## Model
 
-The detection stack loads `models/best_exam_model.pt` as the primary detection engine. If your local file is named `best.pt`, move it to:
+The detection stack resolves the YOLO model in this order: `EXAM_YOLO_MODEL_PATH`, configured model path, `models/yolo11n.pt`, `models/best_exam_model.pt`, `models/yolov8n.pt`, then `models/yolov8n_base.pt`. Copy your branch/version1 files into `models/` locally:
 
 ```bash
 mkdir -p models
-mv best.pt models/best_exam_model.pt
+cp /path/to/yolo11n.pt models/yolo11n.pt
+cp /path/to/yolov8n.pt models/yolov8n.pt
 ```
 
 ## Project structure requirement
