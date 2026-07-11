@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import time
-import cv2
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
-import mediapipe as mp
 import math
 
 
@@ -104,6 +102,8 @@ class BehaviorAnalysisAgent:
         self.sharing_pairs = GLOBAL_SHARING_PAIRS
 
         # ✅ INITIALIZE MEDIAPIPE MODELS FOR BEHAVIOR DETECTION
+        import mediapipe as mp
+
         try:
             # Face Mesh - for head pose detection
             self.face_mesh = mp.solutions.face_mesh.FaceMesh(
@@ -436,6 +436,7 @@ class BehaviorAnalysisAgent:
                 continue
 
             # Resize for MediaPipe processing
+            import cv2
             roi_resized = cv2.resize(roi, (320, 240))
             rgb = cv2.cvtColor(roi_resized, cv2.COLOR_BGR2RGB)
 

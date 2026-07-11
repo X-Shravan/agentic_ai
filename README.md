@@ -17,3 +17,7 @@ The detection stack loads `models/best_exam_model.pt` as the primary detection e
 mkdir -p models
 mv best.pt models/best_exam_model.pt
 ```
+
+## Project structure requirement
+
+No folder should remain empty. Every folder must contain implementation files, `__init__.py`, or starter templates. Temporary verification scripts belong in `tests/`.
