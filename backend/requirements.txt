@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+ultralytics
+opencv-python
+numpy
+pydantic
+pyyaml
+aiortc
+mediapipe
+langgraph
+langchain
+crewai
+supabase

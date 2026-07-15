@@ -6,19 +6,20 @@ import threading
 import time
 from datetime import datetime
 from collections import deque, defaultdict
-import cv2
 import base64
 import io
 
 # Import surveillance system
 import sys
+from importlib.util import find_spec
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
-try:
-    from main import ExamSurveillanceSystem
-except:
-    print("⚠️ Could not import surveillance system")
+if find_spec("cv2") is None:
+    ExamSurveillanceSystem = None
+    print("⚠️ Could not import surveillance system: cv2 is not installed")
+else:
+    from backend.legacy_runner import ExamSurveillanceSystem
 
 # ===================================================
 # SIMPLE HTTP SERVER (NO FLASK REQUIRED)
@@ -41,7 +42,23 @@ class DashboardData:
 dashboard_data = DashboardData()
 surveillance_system = None
 
+PLACEHOLDER_JPEG = base64.b64decode(
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAH/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAEFAqf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/ASP/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/ASP/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAY/Aqf/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/IV//2gAMAwEAAgADAAAAEP/EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8QH//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8QH//EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEAAT8QH//Z"
+)
+
+def placeholder_frame_bytes(message="Waiting for camera"):
+    """Return a tiny JPEG placeholder so the dashboard does not receive 404s."""
+    return PLACEHOLDER_JPEG
+
+
 class DashboardHandler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
     def do_GET(self):
         parsed_path = urlparse(self.path)
         path = parsed_path.path
@@ -79,15 +96,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 'alert_counts': list(dashboard_data.alert_counts)
             })
         elif path == '/api/camera/frame':
-            if dashboard_data.current_frame_b64:
-                frame_data = base64.b64decode(dashboard_data.current_frame_b64)
-                self.send_response(200)
-                self.send_header('Content-Type', 'image/jpeg')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(frame_data)
-            else:
-                self.send_error(404, 'No frame available')
+            frame_data = (
+                base64.b64decode(dashboard_data.current_frame_b64)
+                if dashboard_data.current_frame_b64
+                else placeholder_frame_bytes('Waiting for Camo/mobile camera')
+            )
+            self.send_response(200)
+            self.send_header('Content-Type', 'image/jpeg')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(frame_data)
+        elif path.startswith('/socket.io/'):
+            self.send_json({'ok': False, 'message': 'Socket.IO is disabled in api_simple.py; HTTP polling is active.'})
         else:
             self.send_error(404, 'Not Found')
     
@@ -108,7 +128,11 @@ def surveillance_loop():
     print("🚀 Starting Surveillance System...")
     
     try:
-        surveillance_system = ExamSurveillanceSystem(config_path="config/config.yaml", demo_mode=True)
+        if ExamSurveillanceSystem is None:
+            print("⚠️ Surveillance backend unavailable; API will serve dashboard placeholders")
+            return
+
+        surveillance_system = ExamSurveillanceSystem(config_path="backend/core/config.yaml", demo_mode=True)
         
         if not surveillance_system.start():
             print("❌ Failed to start surveillance system")
@@ -173,6 +197,7 @@ def surveillance_loop():
                 # Store frame for streaming with detection visualization
                 if frame is not None:
                     try:
+                        import cv2
                         # Draw bounding boxes on frame
                         annotated_frame = frame.copy()
                         for track in tracks:
