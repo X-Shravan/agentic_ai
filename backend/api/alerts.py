@@ -8,6 +8,7 @@ from flask import Flask, jsonify, send_file
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 import cv2
+import numpy as np
 import io
 import base64
 from collections import deque, defaultdict
@@ -18,7 +19,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from main import ExamSurveillanceSystem
+from backend.legacy_runner import ExamSurveillanceSystem
 
 # ✅ REPORT SYSTEM IMPORTS
 from report_integration import initialize_report_system, log_alert_to_report, generate_session_report
@@ -84,6 +85,15 @@ class DashboardData:
         self.last_frame_time = None
 
 dashboard_data = DashboardData()
+
+
+def placeholder_frame_bytes(message="Waiting for camera"):
+    """Return a JPEG placeholder frame instead of a 404 while Camo/webcam warms up."""
+    frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    cv2.putText(frame, message, (95, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
+    ok, buffer = cv2.imencode('.jpg', frame)
+    return buffer.tobytes() if ok else b''
+
 
 # ===================================================
 # SURVEILLANCE LOOP
@@ -406,10 +416,12 @@ def get_cheating_types():
 @app.route('/api/camera/frame', methods=['GET'])
 def get_camera_frame():
     """Get current camera frame"""
-    if dashboard_data.current_frame:
-        frame_data = base64.b64decode(dashboard_data.current_frame)
-        return send_file(io.BytesIO(frame_data), mimetype='image/jpeg')
-    return jsonify({'error': 'No frame available'}), 404
+    frame_data = (
+        base64.b64decode(dashboard_data.current_frame)
+        if dashboard_data.current_frame
+        else placeholder_frame_bytes('Waiting for Camo/mobile camera')
+    )
+    return send_file(io.BytesIO(frame_data), mimetype='image/jpeg')
 
 @app.route('/api/reports/generate', methods=['POST'])
 def api_generate_report():

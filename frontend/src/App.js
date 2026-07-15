@@ -10,8 +10,8 @@ import AlertsPanel from './components/AlertsPanel';
 import Analytics from './components/Analytics';
 import InsightsPanel from './components/InsightsPanel';
 
-const API_URL = 'http://localhost:5000/api';
-const SOCKET_URL = 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || ''; // Leave empty for api_simple.py HTTP polling mode
 
 function App() {
   const [dashboardData, setDashboardData] = useState({
@@ -39,7 +39,11 @@ function App() {
   });
 
   useEffect(() => {
-    // Connect to SocketIO for real-time updates
+    // Connect to SocketIO only when a Socket.IO backend is configured.
+    if (!SOCKET_URL) {
+      return undefined;
+    }
+
     const socket = io(SOCKET_URL, {
       reconnection: true,
       reconnectionDelay: 1000,

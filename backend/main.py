@@ -17,13 +17,8 @@ from enum import Enum
 import uuid
 import numpy as np
 
-try:
-    from backend.api.websocket import init_webrtc_server, get_webrtc_server
-    from aiortc import RTCSessionDescription
-    WEBRTC_AVAILABLE = True
-except Exception as e:
-    logging.warning(f"⚠️ WebRTC not available: {e}")
-    WEBRTC_AVAILABLE = False
+from backend.api import websocket as webrtc_module
+from aiortc import RTCSessionDescription
 
 # Configure logging
 logging.basicConfig(
@@ -31,22 +26,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-# Initialize app first
-app = FastAPI(
-    title="Enterprise Exam Surveillance System",
-    description="Production-ready surveillance backend with WebRTC streaming",
-    version="1.0.0"
-)
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 # ==================== MODELS ====================
@@ -147,6 +126,24 @@ class CameraStatus(BaseModel):
     students_tracked: int = 0
 
 
+# ==================== FASTAPI SETUP ====================
+
+app = FastAPI(
+    title="Enterprise Exam Surveillance System",
+    description="Production-grade AI invigilation platform",
+    version="1.0.0"
+)
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 # ==================== CONNECTION MANAGERS ====================
 
 class ConnectionManager:
@@ -238,7 +235,7 @@ async def startup_event():
     }
     
     # Initialize WebRTC server
-    init_webrtc_server(config)
+    webrtc_module.init_webrtc_server(config)
     logger.info("✅ WebRTC server initialized")
 
 
@@ -246,7 +243,7 @@ async def startup_event():
 async def shutdown_event():
     """Cleanup on shutdown"""
     logger.info("🛑 Shutting down surveillance backend...")
-    server = get_webrtc_server()
+    server = webrtc_module.get_webrtc_server()
     await server.cleanup()
     logger.info("✅ Shutdown complete")
 
@@ -262,7 +259,7 @@ async def webrtc_offer(camera_id: str, offer: WebRTCOffer):
     try:
         logger.info(f"📡 WebRTC offer received for camera {camera_id}")
         
-        server = get_webrtc_server()
+        server = webrtc_module.get_webrtc_server()
         server.register_camera(camera_id)
         
         # Parse offer
@@ -283,7 +280,7 @@ async def webrtc_offer(camera_id: str, offer: WebRTCOffer):
 @app.get("/api/webrtc/cameras/status")
 async def get_all_cameras_status():
     """Get status of all cameras"""
-    server = get_webrtc_server()
+    server = webrtc_module.get_webrtc_server()
     statuses = server.get_all_cameras_status()
     return {"cameras": statuses, "timestamp": datetime.now()}
 
@@ -291,7 +288,7 @@ async def get_all_cameras_status():
 @app.get("/api/webrtc/camera/{camera_id}/status")
 async def get_camera_status(camera_id: str):
     """Get status of specific camera"""
-    server = get_webrtc_server()
+    server = webrtc_module.get_webrtc_server()
     status = server.get_camera_status(camera_id)
     return {**status, "camera_id": camera_id, "timestamp": datetime.now()}
 
@@ -324,7 +321,7 @@ async def push_frame(
             raise ValueError("Failed to decode frame")
         
         # Push to WebRTC server
-        server = get_webrtc_server()
+        server = webrtc_module.get_webrtc_server()
         server.push_frame(camera_id, frame, timestamp.timestamp())
         
         return {"status": "ok", "camera_id": camera_id}
@@ -468,60 +465,20 @@ async def get_student_analytics(student_id: str):
     }
 
 
-# ==================== STARTUP/SHUTDOWN EVENTS ====================
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize server on startup"""
-    try:
-        if WEBRTC_AVAILABLE:
-            config = {"webrtc": {"fps": 30, "bitrate": 2500000}}
-            init_webrtc_server(config)
-            logger.info("✅ WebRTC server initialized")
-        else:
-            logger.warning("⚠️ WebRTC not available - streaming disabled")
-    except Exception as e:
-        logger.error(f"❌ Failed to initialize WebRTC server: {e}")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown"""
-    try:
-        if WEBRTC_AVAILABLE:
-            server = get_webrtc_server()
-            await server.cleanup()
-            logger.info("✅ WebRTC server cleaned up")
-    except Exception as e:
-        logger.warning(f"⚠️ Error during shutdown: {e}")
-
-
 # ==================== HEALTH CHECKS ====================
 
 @app.get("/health")
 async def health_check():
     """System health check"""
-    try:
-        if WEBRTC_AVAILABLE:
-            server = get_webrtc_server()
-            cameras = server.get_all_cameras_status()
-            cameras_registered = len(cameras)
-        else:
-            cameras_registered = 0
-        
-        return {
-            "status": "healthy",
-            "webrtc_server": "running" if WEBRTC_AVAILABLE else "disabled",
-            "cameras_registered": cameras_registered,
-            "timestamp": datetime.now()
-        }
-    except Exception as e:
-        logger.error(f"Health check error: {e}")
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": datetime.now()
-        }
+    server = webrtc_module.get_webrtc_server()
+    cameras = server.get_all_cameras_status()
+    
+    return {
+        "status": "healthy",
+        "webrtc_server": "running",
+        "cameras_registered": len(cameras),
+        "timestamp": datetime.now()
+    }
 
 
 @app.get("/")
@@ -532,9 +489,8 @@ async def root():
         "version": "1.0.0",
         "status": "running",
         "docs": "/docs",
-        "webrtc_enabled": WEBRTC_AVAILABLE,
         "endpoints": {
-            "webrtc": "/api/webrtc/" if WEBRTC_AVAILABLE else "disabled",
+            "webrtc": "/api/webrtc/",
             "alerts": "/api/alerts/",
             "detection": "/api/detection/",
             "analytics": "/api/analytics/",

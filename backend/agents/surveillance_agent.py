@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import queue
 import threading
 import time
@@ -207,7 +208,11 @@ class DemoSurveillanceAgent(SurveillanceAgent):
 
         print("[INFO] Searching for webcam...")
 
-        for i in range(5):
+        preferred = os.getenv("CAMO_CAMERA_INDEX")
+        indices = [int(preferred)] if preferred and preferred.isdigit() else []
+        indices.extend(i for i in range(10) if i not in indices)
+
+        for i in indices:
 
             cap = cv2.VideoCapture(i)
 
@@ -221,7 +226,9 @@ class DemoSurveillanceAgent(SurveillanceAgent):
     # ---------------------------------
     def start(self) -> bool:
 
-        source = self.config.get("demo", {}).get("video_source")
+        source = os.getenv("CAMO_CAMERA_INDEX") or self.config.get("demo", {}).get("video_source")
+        if isinstance(source, str) and source.isdigit():
+            source = int(source)
 
         if source is None:
             source = self._find_camera()

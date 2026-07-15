@@ -81,3 +81,9 @@ performance:
   frame_skip: 0
   batch_size: 1
   num_workers: 4
+
+demo:
+  # For Camo/mobile-as-webcam on Windows, set CAMO_CAMERA_INDEX first if needed:
+  #   $env:CAMO_CAMERA_INDEX=1
+  # Then run api_simple.py or backend/legacy_runner.py in demo mode.
+  video_source: 0

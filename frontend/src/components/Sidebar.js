@@ -46,8 +46,8 @@ function Sidebar({ isConnected }) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <a
-                href="#"
+              <button
+                type="button"
                 className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                   item.active
                     ? 'bg-gradient-to-r from-neon-blue/20 to-neon-purple/20 border border-neon-blue/30 text-neon-blue'
@@ -56,7 +56,7 @@ function Sidebar({ isConnected }) {
               >
                 <item.icon size={20} />
                 <span>{item.label}</span>
-              </a>
+              </button>
             </motion.li>
           ))}
         </ul>

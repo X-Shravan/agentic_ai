@@ -9,7 +9,7 @@ function CameraFeed() {
   useEffect(() => {
     const fetchFrame = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/camera/frame');
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/camera/frame`);
         if (response.ok) {
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
