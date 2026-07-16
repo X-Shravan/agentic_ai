@@ -34,7 +34,9 @@ class ExamSurveillanceSystem:
 
         # Surveillance Agent
         if demo_mode:
-            self.config.setdefault("demo", {})["video_source"] = 0
+            # Respect DroidCam/Camo/CAMERA_INDEX and config video_source.
+            # Do not force index 0 because many laptops have a broken built-in webcam.
+            self.config.setdefault("demo", {})
             self.surveillance_agent = DemoSurveillanceAgent(self.config)
         else:
             self.surveillance_agent = SurveillanceAgent(self.config)

@@ -1,405 +1,284 @@
-"""
-Gemini Agentic AI Reasoning Engine
-Performs multi-step reasoning on surveillance metadata
-Generates intelligent explanations and risk assessment
-Uses structured prompting for consistent outputs
-"""
-
+"""Gemini reasoning agent for privacy-safe structured surveillance events."""
 from __future__ import annotations
+
 import asyncio
 import json
 import logging
-from typing import Dict, List, Optional
-from datetime import datetime, timedelta
-from dataclasses import asdict
-
-import google.generativeai as genai
-from google.api_core.exceptions import GoogleAPIError
+import os
+import re
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
+try:
+    import google.generativeai as genai
+    from google.api_core.exceptions import GoogleAPIError
+except Exception:  # pragma: no cover - optional dependency in local deployments
+    genai = None
+
+    class GoogleAPIError(Exception):
+        pass
+
+
+GEMINI_SYSTEM_PROMPT = """You are an AI Invigilation Assistant.
+
+You receive structured surveillance events.
+
+You never analyze video.
+
+You never perform detection.
+
+You explain AI findings.
+
+You generate risk interpretations.
+
+You summarize evidence.
+
+You create professional invigilation reports.
+
+You always indicate uncertainty when evidence is weak.
+
+You never conclude misconduct from a single event.
+
+You require corroborating signals."""
+
 
 class GeminiReasoningEngine:
-    """
-    Agentic AI reasoning using Gemini API
-    Processes structured metadata (never video frames)
-    Performs multi-step analysis and decision-making
-    """
-    
-    def __init__(self, api_key: str, model: str = "gemini-2.0-flash"):
-        """
-        Initialize Gemini reasoning engine
-        
-        Args:
-            api_key: Google Gemini API key
-            model: Model to use (gemini-2.0-flash for speed, gemini-pro for quality)
-        """
-        genai.configure(api_key=api_key)
+    """Uses Gemini only on structured JSON and falls back to deterministic local reasoning."""
+
+    ALLOWED_KEYS = {
+        "student_id",
+        "seat",
+        "camera",
+        "camera_id",
+        "risk_score",
+        "risk_level",
+        "eye_gaze",
+        "head_pose",
+        "pose",
+        "mobile_detected",
+        "timeline",
+        "behaviors",
+        "confidence",
+        "timestamp",
+        "tracking_id",
+        "evidence_id",
+    }
+
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.0-flash"):
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         self.model_name = model
-        self.model = genai.GenerativeModel(model)
-        
-        # System prompt for consistent behavior
-        self.system_prompt = """You are an expert AI invigilation system analyzing exam surveillance data.
-Your role is to:
-1. Interpret student behavior patterns from structured metadata
-2. Assess cheating likelihood with probabilistic reasoning
-3. Distinguish between innocent behavior and actual cheating
-4. Provide actionable insights with confidence levels
+        self.model = None
+        if self.api_key and genai is not None:
+            genai.configure(api_key=self.api_key)
+            self.model = genai.GenerativeModel(model)
+        logger.info("Gemini reasoning engine initialized; remote=%s", bool(self.model))
 
-IMPORTANT GUIDELINES:
-- Analyze probabilities, not certainties
-- Consider context and temporal patterns
-- Distinguish between isolated incidents and persistent behavior
-- Avoid bias against nervous students
-- Flag only behaviors with high confidence as suspicious
-
-OUTPUT FORMAT: Always return valid JSON with this structure:
-{
-  "severity": "low|medium|high|critical",
-  "confidence": 0.0-1.0,
-  "primary_assessment": "Brief 1-2 sentence assessment",
-  "reasoning": ["Logic step 1", "Logic step 2", ...],
-  "risk_factors": ["Factor 1", "Factor 2", ...],
-  "mitigating_factors": ["Factor 1", "Factor 2", ...],
-  "recommendation": "Recommended action",
-  "evidence_strength": "weak|moderate|strong",
-  "false_positive_likelihood": 0.0-1.0
-}"""
-        
-        logger.info(f"✅ Gemini reasoning engine initialized ({model})")
-    
-    async def analyze_alert(self, alert_metadata: Dict) -> Dict:
-        """
-        Analyze alert using Gemini reasoning
-        
-        Args:
-            alert_metadata: Structured metadata from detection pipeline
-            
-        Returns:
-            Reasoning output with severity, confidence, explanation
-        """
+    async def analyze_alert(self, alert_metadata: Dict[str, Any]) -> Dict[str, Any]:
+        payload = self._privacy_filter(alert_metadata)
+        if not self.model:
+            return self._fallback_analysis(payload)
         try:
-            # Prepare prompt
-            prompt = self._prepare_alert_prompt(alert_metadata)
-            
-            # Call Gemini API (async)
-            response = await asyncio.to_thread(
-                self._call_gemini,
-                prompt
-            )
-            
-            # Parse response
-            result = self._parse_gemini_response(response)
-            
-            logger.info(f"✅ Alert analyzed: severity={result.get('severity')}, "
-                       f"confidence={result.get('confidence')}")
-            
-            return result
-        
-        except Exception as e:
-            logger.error(f"❌ Gemini analysis failed: {e}")
-            return self._fallback_analysis(alert_metadata)
-    
-    async def analyze_student_pattern(self, student_metadata: Dict) -> Dict:
-        """
-        Analyze overall behavior pattern for a student
-        
-        Args:
-            student_metadata: Historical behavior data for student
-            
-        Returns:
-            Pattern analysis with risk assessment
-        """
+            response = await asyncio.to_thread(self._call_gemini, self._prompt(payload))
+            parsed = self._parse_gemini_response(response)
+            if "error" in parsed:
+                return self._fallback_analysis(payload)
+            return parsed
+        except Exception as exc:
+            logger.warning("Gemini unavailable, using local reasoning: %s", exc)
+            return self._fallback_analysis(payload)
+
+    async def analyze_student_pattern(self, student_metadata: Dict[str, Any]) -> Dict[str, Any]:
+        return await self.analyze_alert(student_metadata)
+
+    async def reason_about_scene(self, scene_metadata: Dict[str, Any]) -> Dict[str, Any]:
+        scene = self._privacy_filter(scene_metadata)
+        scene["students"] = [self._privacy_filter(item) for item in scene_metadata.get("students", [])[:20]]
+        if not self.model:
+            return self._fallback_scene(scene)
         try:
-            prompt = self._prepare_pattern_prompt(student_metadata)
-            
-            response = await asyncio.to_thread(
-                self._call_gemini,
-                prompt
-            )
-            
-            result = self._parse_gemini_response(response)
-            
-            logger.info(f"✅ Student pattern analyzed: {student_metadata.get('student_id')}")
-            
-            return result
-        
-        except Exception as e:
-            logger.error(f"❌ Pattern analysis failed: {e}")
-            return self._fallback_pattern_analysis(student_metadata)
-    
-    async def reason_about_scene(self, scene_metadata: Dict) -> Dict:
-        """
-        Multi-step reasoning about overall classroom scene
-        
-        Args:
-            scene_metadata: Metadata about multiple students and events
-            
-        Returns:
-            Scene analysis with insights
-        """
-        try:
-            prompt = self._prepare_scene_prompt(scene_metadata)
-            
-            response = await asyncio.to_thread(
-                self._call_gemini,
-                prompt
-            )
-            
-            result = self._parse_gemini_response(response)
-            
-            logger.info(f"✅ Scene analyzed: {len(scene_metadata.get('students', []))} students")
-            
-            return result
-        
-        except Exception as e:
-            logger.error(f"❌ Scene analysis failed: {e}")
-            return {"error": str(e)}
-    
-    def _prepare_alert_prompt(self, metadata: Dict) -> str:
-        """Prepare structured prompt for alert analysis"""
-        
-        return f"""{self.system_prompt}
+            response = await asyncio.to_thread(self._call_gemini, self._scene_prompt(scene))
+            parsed = self._parse_gemini_response(response)
+            return parsed if "error" not in parsed else self._fallback_scene(scene)
+        except Exception:
+            return self._fallback_scene(scene)
 
-ANALYZE THIS ALERT:
+    async def explain_decision(self, decision_data: Dict[str, Any]) -> str:
+        result = await self.analyze_alert(decision_data)
+        return result.get("ai_explanation") or result.get("primary_assessment", "No explanation available.")
 
-Student ID: {metadata.get('student_id')}
-Timestamp: {metadata.get('timestamp', datetime.now().isoformat())}
-Camera: {metadata.get('camera_id', 'unknown')}
+    def _privacy_filter(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        filtered = {key: metadata.get(key) for key in self.ALLOWED_KEYS if key in metadata}
+        if "camera_id" in filtered and "camera" not in filtered:
+            filtered["camera"] = filtered.pop("camera_id")
+        return filtered
 
-DETECTED BEHAVIORS:
-{json.dumps(metadata.get('behaviors', []), indent=2)}
+    def _prompt(self, payload: Dict[str, Any]) -> str:
+        return f"""{GEMINI_SYSTEM_PROMPT}
 
-RISK SCORES:
-- Gaze Risk: {metadata.get('gaze_score', 0.0):.2f}
-- Pose Risk: {metadata.get('pose_score', 0.0):.2f}
-- Phone Detection: {metadata.get('phone_score', 0.0):.2f}
-- Movement Risk: {metadata.get('movement_score', 0.0):.2f}
-- Overall: {metadata.get('overall_risk', 0.0):.2f}
+Analyze this structured JSON only. Do not request or infer from video/images.
 
-TEMPORAL CONTEXT:
-- Time into exam: {metadata.get('time_into_exam_min', 0)} minutes
-- Previous alerts: {metadata.get('alert_count', 0)}
-- Behavior persistence: {metadata.get('persistence_frames', 0)} frames
+INPUT:
+{json.dumps(payload, indent=2, default=str)}
 
-CONTEXTUAL INFO:
-- Exam difficulty: {metadata.get('exam_difficulty', 'unknown')}
-- Student stress level (estimated): {metadata.get('stress_estimate', 'unknown')}
-- Environmental conditions: {metadata.get('environment', 'standard')}
+Return valid JSON with:
+- ai_explanation
+- risk_interpretation
+- event_summary
+- recommendation
+- false_positive_analysis
+- dashboard_summary
+- pdf_report_summary
+- severity
+- confidence
+- evidence_strength
+- uncertainty
+"""
 
-PERFORM THIS ANALYSIS:
-1. Are the detected behaviors consistent with cheating?
-2. What is the probability this is a false positive?
-3. What is the confidence in this assessment?
-4. What additional information would help clarify?
-5. What should the invigilator do?
+    def _scene_prompt(self, payload: Dict[str, Any]) -> str:
+        return f"""{GEMINI_SYSTEM_PROMPT}
 
-Provide your analysis in JSON format."""
-    
-    def _prepare_pattern_prompt(self, metadata: Dict) -> str:
-        """Prepare prompt for student pattern analysis"""
-        
-        behavior_summary = json.dumps(metadata.get('behavior_history', []), indent=2)
-        
-        return f"""{self.system_prompt}
+Create an exam-level report summary from structured JSON only.
 
-ANALYZE STUDENT BEHAVIOR PATTERN:
+INPUT:
+{json.dumps(payload, indent=2, default=str)}
 
-Student ID: {metadata.get('student_id')}
-Exam: {metadata.get('exam_id', 'unknown')}
-Duration analyzed: {metadata.get('duration_minutes', 0)} minutes
+Return valid JSON with executive_summary, student_summary, risk_assessment, ai_findings, recommendations."""
 
-BEHAVIOR HISTORY:
-{behavior_summary}
-
-STATISTICS:
-- Total alerts: {metadata.get('alert_count', 0)}
-- Most common behavior: {metadata.get('top_behavior', 'none')}
-- Alert frequency: {metadata.get('alert_frequency', 'low')}
-- Risk trend: {metadata.get('risk_trend', 'stable')}
-
-PATTERN ANALYSIS:
-1. What is the overall risk profile of this student?
-2. Are behaviors indicative of attempted cheating or just nervousness?
-3. What is the confidence in the pattern assessment?
-4. Should this student be flagged for review?
-
-Provide your analysis in JSON format."""
-    
-    def _prepare_scene_prompt(self, metadata: Dict) -> str:
-        """Prepare prompt for scene-level reasoning"""
-        
-        students_info = json.dumps(metadata.get('students', [])[:10], indent=2)  # Limit to 10
-        
-        return f"""{self.system_prompt}
-
-ANALYZE CLASSROOM SCENE:
-
-Exam: {metadata.get('exam_id', 'unknown')}
-Time: {metadata.get('timestamp', datetime.now().isoformat())}
-Total Students: {metadata.get('total_students', 0)}
-Cameras: {metadata.get('camera_count', 0)}
-
-HIGH-RISK STUDENTS (top 10):
-{students_info}
-
-SCENE STATISTICS:
-- Overall alert rate: {metadata.get('alert_rate', 0.0):.2%}
-- Students flagged: {metadata.get('flagged_count', 0)}
-- Critical alerts: {metadata.get('critical_count', 0)}
-- Exam difficulty estimate: {metadata.get('exam_difficulty', 'unknown')}
-
-MULTI-STEP REASONING:
-1. What is the overall exam integrity assessment?
-2. Are there patterns suggesting coordinated cheating?
-3. What are the most critical areas needing attention?
-4. What is the confidence in this assessment?
-5. What recommendations do you have for exam administration?
-
-Provide your analysis in JSON format."""
-    
     def _call_gemini(self, prompt: str) -> str:
-        """Synchronous call to Gemini API"""
+        if not self.model:
+            raise RuntimeError("Gemini model is not configured")
+        response = self.model.generate_content(
+            prompt,
+            generation_config={"max_output_tokens": 1200, "temperature": 0.2, "top_p": 0.8},
+        )
+        return response.text
+
+    def _parse_gemini_response(self, response_text: str) -> Dict[str, Any]:
         try:
-            response = self.model.generate_content(
-                prompt,
-                generation_config={
-                    "max_output_tokens": 1000,
-                    "temperature": 0.3,  # More deterministic
-                    "top_p": 0.8,
-                }
-            )
-            return response.text
-        except GoogleAPIError as e:
-            logger.error(f"Gemini API error: {e}")
-            raise
-    
-    def _parse_gemini_response(self, response_text: str) -> Dict:
-        """Parse Gemini response, extract JSON"""
-        try:
-            # Try to find JSON in response
-            import re
-            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
-            
-            if json_match:
-                json_str = json_match.group(0)
-                return json.loads(json_str)
-            else:
-                # If no JSON, try parsing entire response
-                return json.loads(response_text)
-        
-        except json.JSONDecodeError:
-            logger.warning("Failed to parse JSON from Gemini response")
-            return {
-                "error": "parse_error",
-                "raw_response": response_text,
-            }
-    
-    def _fallback_analysis(self, metadata: Dict) -> Dict:
-        """Fallback analysis if Gemini API fails"""
-        
-        overall_risk = metadata.get('overall_risk', 0.0)
-        behaviors = metadata.get('behaviors', [])
-        
-        # Simple rule-based assessment
-        if overall_risk > 70:
-            severity = "critical"
-            confidence = 0.7
-        elif overall_risk > 50:
-            severity = "high"
-            confidence = 0.65
-        elif overall_risk > 30:
-            severity = "medium"
-            confidence = 0.6
+            match = re.search(r"\{.*\}", response_text, re.DOTALL)
+            return json.loads(match.group(0) if match else response_text)
+        except Exception:
+            return {"error": "parse_error", "raw_response": response_text}
+
+    def _fallback_analysis(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        risk_score = float(metadata.get("risk_score") or metadata.get("overall_risk") or 0.0)
+        level = metadata.get("risk_level") or self._level(risk_score)
+        gaze = metadata.get("eye_gaze") or metadata.get("gaze") or "UNKNOWN"
+        head_pose = metadata.get("head_pose") or "UNKNOWN"
+        pose = metadata.get("pose") or "UNKNOWN"
+        mobile = bool(metadata.get("mobile_detected"))
+        behaviors = metadata.get("behaviors") or []
+        corroborating = sum([mobile, gaze in {"LEFT", "RIGHT", "DOWN"}, head_pose in {"LEFT", "RIGHT", "DOWN"}, pose not in {"UNKNOWN", "CENTER", "NORMAL"}, bool(behaviors)])
+
+        if mobile and corroborating >= 2:
+            summary = "Possible unauthorized mobile usage behavior observed."
+            recommendation = "Immediate Review" if risk_score >= 71 else "Manual Verification"
+            strength = "strong"
+        elif corroborating >= 2:
+            summary = "Multiple suspicious behavioral signals were observed."
+            recommendation = "Observe Closely"
+            strength = "moderate"
+        elif corroborating == 1:
+            summary = "A single weak suspicious signal was observed."
+            recommendation = "Continue Monitoring"
+            strength = "weak"
         else:
-            severity = "low"
-            confidence = 0.5
-        
+            summary = "No suspicious activity detected."
+            recommendation = "Continue Monitoring"
+            strength = "weak"
+
+        explanation = self._compose_explanation(metadata, risk_score, level, summary)
+        uncertainty = "Evidence should be manually reviewed; misconduct is not concluded from one event."
         return {
-            "severity": severity,
-            "confidence": confidence,
-            "primary_assessment": f"Risk score: {overall_risk:.0f}/100",
-            "reasoning": [f"Detected {len(behaviors)} suspicious behaviors"],
+            "severity": str(level).lower(),
+            "confidence": 0.82 if strength == "strong" else 0.64 if strength == "moderate" else 0.45,
+            "ai_explanation": explanation,
+            "primary_assessment": explanation,
+            "risk_interpretation": f"{risk_score:.0f} maps to {level} because corroborating structured signals produced elevated risk.",
+            "event_summary": summary,
+            "recommendation": recommendation,
+            "false_positive_analysis": self._false_positive_text(metadata, strength),
+            "dashboard_summary": self._dashboard_summary(mobile, gaze, summary),
+            "pdf_report_summary": f"Executive Summary: {summary}\nRisk Assessment: {level} ({risk_score:.0f}/100).\nAI Findings: {explanation}\nRecommendations: {recommendation}.",
+            "evidence_strength": strength,
+            "uncertainty": uncertainty,
             "risk_factors": behaviors,
-            "mitigating_factors": [],
-            "recommendation": "Review by invigilator",
-            "evidence_strength": "moderate",
-            "false_positive_likelihood": 1.0 - confidence,
-            "note": "Fallback analysis (Gemini unavailable)"
+            "mitigating_factors": [] if strength != "weak" else ["Limited corroborating signals"],
+            "false_positive_likelihood": 0.2 if strength == "strong" else 0.4 if strength == "moderate" else 0.65,
         }
-    
-    def _fallback_pattern_analysis(self, metadata: Dict) -> Dict:
-        """Fallback pattern analysis"""
+
+    def _fallback_scene(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        students = metadata.get("students", [])
+        critical = [s for s in students if float(s.get("risk_score", 0) or 0) >= 71]
         return {
-            "pattern": "insufficient_data",
-            "confidence": 0.3,
-            "recommendation": "Collect more data before assessment"
+            "executive_summary": f"Processed structured events for {len(students)} students with {len(critical)} critical cases.",
+            "student_summary": students[:10],
+            "risk_assessment": "Manual review recommended for high and critical risk students.",
+            "ai_findings": "Only structured metadata was analyzed; no video, faces, or raw images were sent.",
+            "recommendations": ["Continue monitoring", "Review corroborated critical alerts", "Document evidence before action"],
         }
-    
-    async def explain_decision(self, decision_data: Dict) -> str:
-        """
-        Generate natural language explanation for a decision
-        """
-        try:
-            prompt = f"""Explain this exam surveillance decision in 2-3 sentences for an invigilator:
 
-Student: {decision_data.get('student_id')}
-Severity: {decision_data.get('severity')}
-Primary Concern: {decision_data.get('primary_concern')}
-Evidence: {json.dumps(decision_data.get('backend/evidence', []), indent=2)}
+    def _compose_explanation(self, metadata: Dict[str, Any], risk_score: float, level: str, summary: str) -> str:
+        parts = [f"Student {metadata.get('student_id', 'UNKNOWN')} has a {level} risk score of {risk_score:.0f}."]
+        if metadata.get("mobile_detected"):
+            parts.append("A mobile-device signal was present.")
+        if metadata.get("eye_gaze"):
+            parts.append(f"Eye gaze was classified as {metadata.get('eye_gaze')}.")
+        if metadata.get("head_pose"):
+            parts.append(f"Head pose was classified as {metadata.get('head_pose')}.")
+        if metadata.get("pose"):
+            parts.append(f"Pose signal was {metadata.get('pose')}.")
+        parts.append(summary)
+        return " ".join(parts)
 
-Explanation:"""
-            
-            response = await asyncio.to_thread(
-                self._call_gemini,
-                prompt
-            )
-            
-            return response.strip()
-        
-        except Exception as e:
-            logger.error(f"Explanation generation failed: {e}")
-            return "Unable to generate explanation"
+    def _false_positive_text(self, metadata: Dict[str, Any], strength: str) -> str:
+        if strength == "weak":
+            return "Evidence is weak or isolated. Manual review recommended before escalation."
+        if metadata.get("mobile_detected") and float(metadata.get("confidence", 1.0) or 1.0) < 0.7:
+            return "Mobile confidence is moderate. Corroborating gaze and pose should be reviewed manually."
+        return "Signals are corroborated, but final misconduct determination requires human review."
+
+    def _dashboard_summary(self, mobile: bool, gaze: str, summary: str) -> str:
+        if mobile:
+            return "Mobile usage detected. Repeated gaze shifts observed." if gaze in {"LEFT", "RIGHT", "DOWN"} else "Mobile usage detected."
+        if gaze in {"LEFT", "RIGHT"}:
+            return "Repeated gaze shifts observed."
+        return summary
+
+    def _level(self, score: float) -> str:
+        if score <= 20:
+            return "LOW"
+        if score <= 40:
+            return "MEDIUM"
+        if score <= 70:
+            return "HIGH"
+        return "CRITICAL"
 
 
 class GeminiBatchProcessor:
-    """Process multiple alerts asynchronously using Gemini"""
-    
+    """Processes structured alert batches asynchronously."""
+
     def __init__(self, reasoning_engine: GeminiReasoningEngine, batch_size: int = 5):
         self.engine = reasoning_engine
         self.batch_size = batch_size
-        self.queue: List[Dict] = []
-        self.results: Dict[str, Dict] = {}
-    
-    async def queue_alert(self, alert: Dict):
-        """Queue alert for batch processing"""
+        self.queue: List[Dict[str, Any]] = []
+        self.results: Dict[str, Dict[str, Any]] = {}
+
+    async def queue_alert(self, alert: Dict[str, Any]) -> None:
         self.queue.append(alert)
-        
-        # Process batch if full
         if len(self.queue) >= self.batch_size:
             await self.process_batch()
-    
-    async def process_batch(self):
-        """Process queued alerts in batch"""
+
+    async def process_batch(self) -> None:
         if not self.queue:
             return
-        
-        logger.info(f"🔄 Processing batch of {len(self.queue)} alerts with Gemini...")
-        
-        tasks = [
-            self.engine.analyze_alert(alert)
-            for alert in self.queue
-        ]
-        
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+        results = await asyncio.gather(*(self.engine.analyze_alert(alert) for alert in self.queue), return_exceptions=True)
         for alert, result in zip(self.queue, results):
-            alert_id = alert.get('alert_id', str(datetime.now().timestamp()))
-            self.results[alert_id] = result if isinstance(result, dict) else {"error": str(result)}
-        
+            alert_id = alert.get("alert_id") or alert.get("evidence_id") or str(datetime.utcnow().timestamp())
+            self.results[str(alert_id)] = result if isinstance(result, dict) else {"error": str(result)}
         self.queue.clear()
-        logger.info(f"✅ Batch processing complete ({len(self.results)} results)")
-    
-    def get_result(self, alert_id: str) -> Optional[Dict]:
-        """Get result for a specific alert"""
+
+    def get_result(self, alert_id: str) -> Optional[Dict[str, Any]]:
         return self.results.get(alert_id)

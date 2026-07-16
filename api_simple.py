@@ -15,11 +15,30 @@ from importlib.util import find_spec
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
-if find_spec("cv2") is None:
+missing_cv_dependencies = [
+    package_name
+    for package_name in ("cv2", "ultralytics")
+    if find_spec(package_name) is None
+]
+
+if missing_cv_dependencies:
     ExamSurveillanceSystem = None
-    print("⚠️ Could not import surveillance system: cv2 is not installed")
+    print(
+        "⚠️ Could not import surveillance system: "
+        f"missing {', '.join(missing_cv_dependencies)}"
+    )
 else:
-    from backend.legacy_runner import ExamSurveillanceSystem
+    try:
+        import cv2
+        import ultralytics  # noqa: F401
+
+        if not hasattr(cv2, "imshow"):
+            raise ImportError("cv2.imshow is unavailable; install opencv-python instead of opencv-python-headless")
+
+        from backend.legacy_runner import ExamSurveillanceSystem
+    except Exception as import_error:
+        ExamSurveillanceSystem = None
+        print(f"⚠️ Could not import surveillance system: {import_error}")
 
 # ===================================================
 # SIMPLE HTTP SERVER (NO FLASK REQUIRED)

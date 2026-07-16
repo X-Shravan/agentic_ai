@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import List, Tuple
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Tuple
 
 import cv2
 from ultralytics import YOLO
@@ -22,6 +22,13 @@ class Detection:
     def center(self):
         x1, y1, x2, y2 = self.bbox
         return ((x1 + x2) // 2, (y1 + y2) // 2)
+
+    def to_dict(self) -> Dict[str, Any]:
+        label = "mobile" if self.class_name == "cell phone" else self.class_name
+        payload = asdict(self)
+        payload["class"] = label
+        payload["bbox"] = list(self.bbox)
+        return payload
 
 
 # --------------------------------------------------
@@ -194,3 +201,7 @@ class DetectionAgent:
             )
 
         return out
+
+    def detect_structured(self, frame) -> List[Dict[str, Any]]:
+        """Return API/workflow-ready detections with class, confidence, and bbox."""
+        return [det.to_dict() for det in self.detect(frame)]

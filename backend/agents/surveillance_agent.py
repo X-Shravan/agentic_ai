@@ -208,7 +208,11 @@ class DemoSurveillanceAgent(SurveillanceAgent):
 
         print("[INFO] Searching for webcam...")
 
-        preferred = os.getenv("CAMO_CAMERA_INDEX")
+        preferred = (
+            os.getenv("DROIDCAM_CAMERA_INDEX")
+            or os.getenv("CAMO_CAMERA_INDEX")
+            or os.getenv("CAMERA_INDEX")
+        )
         indices = [int(preferred)] if preferred and preferred.isdigit() else []
         indices.extend(i for i in range(10) if i not in indices)
 
@@ -226,7 +230,12 @@ class DemoSurveillanceAgent(SurveillanceAgent):
     # ---------------------------------
     def start(self) -> bool:
 
-        source = os.getenv("CAMO_CAMERA_INDEX") or self.config.get("demo", {}).get("video_source")
+        source = (
+            os.getenv("DROIDCAM_CAMERA_INDEX")
+            or os.getenv("CAMO_CAMERA_INDEX")
+            or os.getenv("CAMERA_INDEX")
+            or self.config.get("demo", {}).get("video_source")
+        )
         if isinstance(source, str) and source.isdigit():
             source = int(source)
 
@@ -237,7 +246,7 @@ class DemoSurveillanceAgent(SurveillanceAgent):
             print("[ERROR] No camera found")
             return False
 
-        print("[INFO] Starting demo camera...")
+        print(f"[INFO] Starting demo camera from source: {source}")
 
         self.cap = cv2.VideoCapture(source)
 

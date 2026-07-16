@@ -18,6 +18,10 @@ import uuid
 import numpy as np
 
 from backend.api import websocket as webrtc_module
+from backend.api.alerts import router as alerts_router
+from backend.api.cameras import router as cameras_router
+from backend.api.reports import router as reports_router
+from backend.api.students import router as students_router
 from aiortc import RTCSessionDescription
 
 # Configure logging
@@ -142,6 +146,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(alerts_router, prefix="/api")
+app.include_router(cameras_router, prefix="/api")
+app.include_router(reports_router, prefix="/api")
+app.include_router(students_router, prefix="/api")
 
 
 # ==================== CONNECTION MANAGERS ====================
