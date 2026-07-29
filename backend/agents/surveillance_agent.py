@@ -10,17 +10,7 @@ from typing import Any, Dict, Optional
 import cv2
 import numpy as np
 
-
-# ---------------------------------------------------
-# Camera Configuration
-# ---------------------------------------------------
-@dataclass
-class CameraConfig:
-    id: str
-    rtsp_url: str
-    name: str
-    enabled: bool = True
-
+from backend.camera_manager import CameraManager
 
 # ---------------------------------------------------
 # Frame Structure
@@ -32,105 +22,6 @@ class Frame:
     timestamp: float
     frame_number: int
 
-
-# ---------------------------------------------------
-# Camera Stream (Multi-camera support)
-# ---------------------------------------------------
-class CameraStream:
-
-    def __init__(self, config: CameraConfig, buffer_size: int = 5):
-
-        self.config = config
-        self.frame_buffer: queue.Queue[Frame] = queue.Queue(maxsize=buffer_size)
-
-        self.cap: Optional[cv2.VideoCapture] = None
-        self.running = False
-        self.thread: Optional[threading.Thread] = None
-
-        self.frame_count = 0
-
-    # ---------------------------------
-    def start(self) -> bool:
-
-        print(f"[INFO] Starting camera: {self.config.name}")
-
-        self.cap = cv2.VideoCapture(self.config.rtsp_url)
-
-        if not self.cap.isOpened():
-            print(f"[ERROR] Cannot open camera {self.config.name}")
-            return False
-
-        # Reduce latency
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-        self.running = True
-
-        self.thread = threading.Thread(
-            target=self._capture_loop,
-            daemon=True
-        )
-
-        self.thread.start()
-
-        return True
-
-    # ---------------------------------
-    def _capture_loop(self):
-
-        while self.running and self.cap is not None:
-
-            ok, frame = self.cap.read()
-
-            if not ok:
-                print("[WARN] Camera disconnected. Reconnecting...")
-                time.sleep(1)
-
-                self.cap.release()
-                self.cap = cv2.VideoCapture(self.config.rtsp_url)
-                continue
-
-            self.frame_count += 1
-
-            frame_data = Frame(
-                image=frame,
-                camera_id=self.config.id,
-                timestamp=time.time(),
-                frame_number=self.frame_count
-            )
-
-            # Drop old frames if buffer full
-            if self.frame_buffer.full():
-                try:
-                    self.frame_buffer.get_nowait()
-                except queue.Empty:
-                    pass
-
-            self.frame_buffer.put_nowait(frame_data)
-
-    # ---------------------------------
-    def get_latest_frame(self) -> Optional[Frame]:
-
-        latest = None
-
-        while not self.frame_buffer.empty():
-            latest = self.frame_buffer.get_nowait()
-
-        return latest
-
-    # ---------------------------------
-    def stop(self):
-
-        self.running = False
-
-        if self.thread:
-            self.thread.join(timeout=1)
-
-        if self.cap:
-            self.cap.release()
-
-        print(f"[INFO] Camera stopped: {self.config.name}")
-
-
 # ---------------------------------------------------
 # Multi Camera Surveillance Agent
 # ---------------------------------------------------
@@ -139,53 +30,35 @@ class SurveillanceAgent:
     def __init__(self, config: Dict[str, Any]):
 
         self.config = config
-        self.cameras: Dict[str, CameraStream] = {}
+        self.camera_manager = CameraManager(config.get("cameras", []))
+        self.frame_count = 0
 
-        self._init_cameras()
-
-    def _init_cameras(self):
-
-        for cam in self.config.get("cameras", []):
-
-            if cam.get("enabled", True):
-
-                cfg = CameraConfig(
-                    id=cam["id"],
-                    rtsp_url=cam["rtsp_url"],
-                    name=cam.get("name", cam["id"])
-                )
-
-                self.cameras[cfg.id] = CameraStream(cfg)
+    def _frame_from_image(self, camera_id: str, image: np.ndarray) -> Frame:
+        self.frame_count += 1
+        return Frame(
+            image=image,
+            camera_id=camera_id,
+            timestamp=time.time(),
+            frame_number=self.frame_count,
+        )
 
     # ---------------------------------
     def start(self) -> bool:
 
-        results = []
-
-        for cam in self.cameras.values():
-            results.append(cam.start())
-
-        return all(results)
+        return self.camera_manager.start_all()
 
     # ---------------------------------
     def stop(self):
 
-        for cam in self.cameras.values():
-            cam.stop()
+        self.camera_manager.stop_all()
 
     # ---------------------------------
     def get_frames(self) -> Dict[str, Frame]:
 
-        frames: Dict[str, Frame] = {}
-
-        for cam_id, stream in self.cameras.items():
-
-            frame = stream.get_latest_frame()
-
-            if frame is not None:
-                frames[cam_id] = frame
-
-        return frames
+        return {
+            camera_id: self._frame_from_image(camera_id, image)
+            for camera_id, image in self.camera_manager.read_all().items()
+        }
 
 
 # ---------------------------------------------------
@@ -196,7 +69,7 @@ class DemoSurveillanceAgent(SurveillanceAgent):
     def __init__(self, config: Dict[str, Any]):
 
         self.config = config
-        self.cap: Optional[cv2.VideoCapture] = None
+        self.camera_manager = CameraManager(self._camera_configs())
 
         self.running = False
         self.frame_count = 0
@@ -217,85 +90,67 @@ class DemoSurveillanceAgent(SurveillanceAgent):
         indices.extend(i for i in range(10) if i not in indices)
 
         for i in indices:
-
-            cap = cv2.VideoCapture(i)
-
-            if cap.isOpened():
+            probe = CameraManager([{"id": "probe", "type": "webcam", "device_index": i}])
+            if probe.start_all():
+                probe.stop_all()
                 print(f"[INFO] Using camera index: {i}")
-                cap.release()
                 return i
 
         return None
 
     # ---------------------------------
-    def start(self) -> bool:
+    def _camera_configs(self):
+        configured = self.config.get("cameras") or []
+        if configured:
+            return configured
 
         source = (
-            os.getenv("DROIDCAM_CAMERA_INDEX")
+            os.getenv("DROIDCAM_URL")
+            or os.getenv("RTSP_URL")
+            or os.getenv("MJPEG_URL")
+            or os.getenv("VIDEO_FILE")
+            or os.getenv("DROIDCAM_CAMERA_INDEX")
             or os.getenv("CAMO_CAMERA_INDEX")
             or os.getenv("CAMERA_INDEX")
             or self.config.get("demo", {}).get("video_source")
         )
-        if isinstance(source, str) and source.isdigit():
-            source = int(source)
-
         if source is None:
             source = self._find_camera()
+        camera_type = "webcam"
+        config = {"id": "demo_cam", "name": "Demo Camera", "type": camera_type, "enabled": True}
+        if isinstance(source, str) and not source.isdigit():
+            config["url"] = source
+            config["type"] = "file" if os.path.exists(source) else ("rtsp" if source.startswith("rtsp") else "mjpeg")
+        else:
+            config["device_index"] = int(source or 0)
+        return [config]
 
-        if source is None:
-            print("[ERROR] No camera found")
-            return False
+    def start(self) -> bool:
 
-        print(f"[INFO] Starting demo camera from source: {source}")
-
-        self.cap = cv2.VideoCapture(source)
-
-        if not self.cap.isOpened():
-            print("[ERROR] Could not open camera")
-            return False
-
-        # 🔥 Higher resolution for better detection
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
-        # Reduce latency
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-        self.running = True
-
-        return True
+        print("[INFO] Starting demo cameras through CameraManager")
+        self.running = self.camera_manager.start_all()
+        if not self.running:
+            print("[ERROR] Could not open configured camera source")
+        return self.running
 
     # ---------------------------------
     def stop(self):
 
         self.running = False
-
-        if self.cap:
-            self.cap.release()
+        self.camera_manager.stop_all()
 
         print("[INFO] Demo camera stopped")
 
     # ---------------------------------
     def get_frames(self) -> Dict[str, Frame]:
 
-        if not self.running or self.cap is None:
+        if not self.running:
             return {}
 
-        ok, frame = self.cap.read()
-
-        if not ok:
-            return {}
-
-        self.frame_count += 1
-
-        # 🔥 Resize for YOLO
-        frame = cv2.resize(frame, self.target_size)
-
-        return {
-            "demo_cam": Frame(
-                frame,
-                "demo_cam",
-                time.time(),
-                self.frame_count
-            )
-        }
+        raw_frames = self.camera_manager.read_all()
+        frames = {}
+        for camera_id, frame in raw_frames.items():
+            self.frame_count += 1
+            frame = cv2.resize(frame, self.target_size)
+            frames[camera_id] = Frame(frame, camera_id, time.time(), self.frame_count)
+        return frames

@@ -1,35 +1,48 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  AlertTriangle, BarChart3, Bell, Bot, Brain, Camera, CheckCircle2, Clock,
-  Cpu, Download, FileText, Gauge, HeartPulse, LayoutDashboard, Map, RefreshCw,
-  Search, Server, Shield, User, Users, Video, Wifi, WifiOff, XCircle
-} from 'lucide-react';
-import './index.css';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import io from 'socket.io-client';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
+import SystemStatus from './components/SystemStatus';
+import CameraFeed from './components/CameraFeed';
+import StatsCards from './components/StatsCards';
+import AlertsPanel from './components/AlertsPanel';
+import Analytics from './components/Analytics';
+import InsightsPanel from './components/InsightsPanel';
 
-const API_BASE = (process.env.REACT_APP_API_URL || 'http://localhost:8000/api').replace(/\/$/, '');
-const ROOT_BASE = API_BASE.replace(/\/api$/, '');
-const WS_BASE = (process.env.REACT_APP_WS_URL || ROOT_BASE.replace(/^http/, 'ws')).replace(/\/$/, '');
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || ''; // Leave empty for api_simple.py HTTP polling mode
 
-const getId = (item, keys) => keys.map((key) => item?.[key]).find(Boolean);
-const asArray = (value) => Array.isArray(value) ? value : (value?.alerts || value?.cameras || value?.items || []);
-const pct = (value) => `${Number(value || 0).toFixed(value > 10 ? 0 : 1)}%`;
-const time = (value) => value ? new Date(value).toLocaleTimeString() : 'No backend timestamp';
-const riskClass = (score = 0, level = '') => {
-  const normalized = String(level).toLowerCase();
-  if (normalized.includes('critical') || score >= 80) return 'critical';
-  if (normalized.includes('high') || score >= 60) return 'high';
-  if (normalized.includes('medium') || score >= 31) return 'medium';
-  return 'normal';
-};
+function App() {
+  const [dashboardData, setDashboardData] = useState({
+    total_students: 0,
+    active_ids: 0,
+    total_alerts: 0,
+    normal_students: 0,
+    alerts: [],
+    cheating_types: {},
+    monitoring_time: '00:00:00',
+    system_status: {
+      monitoring: 'Initializing',
+      detection: 'Initializing',
+      camera: 'Disconnected',
+      ai_model: 'Loading'
+    },
+    system_running: false
+  });
 
-function useBackendData() {
-  const [state, setState] = useState({ students: [], cameras: [], alerts: [], evidence: [], reports: [], health: null, analytics: null, wsEvents: [], loading: true, error: null, lastSync: null });
+  const [isConnected, setIsConnected] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [timelineData, setTimelineData] = useState({
+    timestamps: [],
+    alert_counts: []
+  });
 
-  const fetchJson = useCallback(async (path, options) => {
-    const response = await fetch(`${path.startsWith('/health') ? ROOT_BASE : API_BASE}${path}`, options);
-    if (!response.ok) throw new Error(`${path} returned ${response.status}`);
-    return response.json();
-  }, []);
+  useEffect(() => {
+    // Connect to SocketIO only when a Socket.IO backend is configured.
+    if (!SOCKET_URL) {
+      return undefined;
+    }
 
   const refresh = useCallback(async () => {
     try {

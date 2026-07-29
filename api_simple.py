@@ -109,6 +109,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 },
                 'timestamp': datetime.now().isoformat()
             })
+        elif path == '/api/alerts':
+            self.send_json({'alerts': dashboard_data.alerts, 'total': len(dashboard_data.alerts)})
+        elif path == '/api/alerts/evidence':
+            self.send_json([])
+        elif path == '/api/cameras':
+            self.send_json([{'camera_id': 'demo_cam', 'name': 'Demo Camera', 'type': 'webcam', 'status': dashboard_data.system_status if hasattr(dashboard_data, 'system_status') else 'connected', 'fps': 30, 'resolution': [1280, 720], 'enabled': True}])
+        elif path == '/api/students':
+            self.send_json([{'student_id': str(track_id), 'tracking_id': track_id, 'name': f'Student {track_id}'} for track_id in dashboard_data.active_ids])
+        elif path == '/api/reports':
+            self.send_json([])
+        elif path == '/api/agents/status':
+            self.send_json({'agents': [{'name': name, 'status': 'running' if ExamSurveillanceSystem is not None else 'unavailable'} for name in ['Detection Agent', 'Tracking Agent', 'Behavior Agent', 'Risk Agent']]})
         elif path == '/api/analytics/timeline':
             self.send_json({
                 'timestamps': list(dashboard_data.timestamps),
@@ -261,8 +273,8 @@ if __name__ == '__main__':
     surveillance_thread.start()
     
     # Start HTTP server
-    server = HTTPServer(('0.0.0.0', 5000), DashboardHandler)
-    print("🚀 API Server running on http://localhost:5000")
+    server = HTTPServer(('0.0.0.0', 8080), DashboardHandler)
+    print("🚀 API Server running on http://localhost:8080")
     print("📊 Dashboard: http://localhost:3000")
     
     try:
