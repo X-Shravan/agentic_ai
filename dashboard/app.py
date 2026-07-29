@@ -1,5 +1,9 @@
 from flask import Flask, render_template, Response, jsonify
-import cv2
+try:
+    import cv2
+except Exception:  # pragma: no cover
+    cv2 = None
+from backend.camera_manager import CameraManager
 import threading
 import logging
 
@@ -17,25 +21,24 @@ system_data = {
     "alerts": [],
 }
 
-# Try to initialize camera, but don't fail if unavailable
-camera = None
-try:
-    camera = cv2.VideoCapture(0)
-    if not camera.isOpened():
-        logger.warning("⚠️ Camera not available")
-        camera = None
-except Exception as e:
-    logger.warning(f"⚠️ Could not initialize camera: {e}")
-    camera = None
+# Try to initialize camera through CameraManager, but don't fail if unavailable
+camera_manager = CameraManager([{"id": "dashboard_cam", "name": "Dashboard Camera", "type": "webcam", "device_index": 0}])
+camera_available = camera_manager.start_all()
+if not camera_available:
+    logger.warning("⚠️ Camera not available")
 
 
 def generate_frames():
     """Generate frames from camera"""
-    if camera is None:
-        # Return a placeholder black frame if no camera
-        while True:
-            import numpy as np
-            frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    while True:
+        try:
+            frames = camera_manager.read_all() if camera_available else {}
+            frame = frames.get("dashboard_cam")
+            if frame is None:
+                import numpy as np
+                frame = np.zeros((480, 640, 3), dtype=np.uint8)
+            if cv2 is None:
+                break
             ret, buffer = cv2.imencode('.jpg', frame)
             yield (
                 b'--frame\r\n'
@@ -43,25 +46,9 @@ def generate_frames():
                 buffer.tobytes() +
                 b'\r\n'
             )
-    else:
-        while True:
-            try:
-                success, frame = camera.read()
-                if not success:
-                    break
-
-                ret, buffer = cv2.imencode('.jpg', frame)
-                frame_bytes = buffer.tobytes()
-
-                yield (
-                    b'--frame\r\n'
-                    b'Content-Type: image/jpeg\r\n\r\n' +
-                    frame_bytes +
-                    b'\r\n'
-                )
-            except Exception as e:
-                logger.error(f"Frame generation error: {e}")
-                break
+        except Exception as e:
+            logger.error(f"Frame generation error: {e}")
+            break
 
 
 @app.route("/")
@@ -116,7 +103,7 @@ def health():
     return jsonify({
         "status": "healthy",
         "service": "dashboard",
-        "camera_available": camera is not None
+        "camera_available": camera_available
     })
 
 

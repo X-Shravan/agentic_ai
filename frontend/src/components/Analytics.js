@@ -16,7 +16,7 @@ function Analytics({ cheatingTypes }) {
     // Fetch real-time timeline data
     const fetchTimeline = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/analytics/timeline`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080/api'}/analytics/timeline`);
         if (response.ok) {
           const data = await response.json();
           

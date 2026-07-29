@@ -10,7 +10,7 @@ import AlertsPanel from './components/AlertsPanel';
 import Analytics from './components/Analytics';
 import InsightsPanel from './components/InsightsPanel';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || ''; // Leave empty for api_simple.py HTTP polling mode
 
 function App() {

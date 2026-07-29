@@ -9,6 +9,7 @@ import sys
 import time
 from pathlib import Path
 import cv2
+from backend.camera_manager import CameraManager
 import yaml
 from collections import defaultdict
 import numpy as np
@@ -66,14 +67,10 @@ class SimpleSurveillanceSystem:
         else:
             video_source = self.config.get("video_source", 0)
         
-        self.cap = cv2.VideoCapture(video_source)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        
-        if not self.cap.isOpened():
+        self.camera_manager = CameraManager([{"id": "camera_0", "type": "webcam" if isinstance(video_source, int) else "file", "device_index": video_source if isinstance(video_source, int) else None, "url": video_source if not isinstance(video_source, int) else None, "resolution": [1280, 720]}])
+        if not self.camera_manager.start_all():
             print("❌ Cannot open camera")
             return False
-        
         print("✅ Camera opened")
         return True
     
@@ -94,8 +91,8 @@ class SimpleSurveillanceSystem:
     def stop(self):
         """Stop surveillance"""
         self.running = False
-        if hasattr(self, 'cap'):
-            self.cap.release()
+        if hasattr(self, 'camera_manager'):
+            self.camera_manager.stop_all()
         print("🛑 Surveillance stopped")
     
     def process_frame(self):
@@ -112,8 +109,9 @@ class SimpleSurveillanceSystem:
         → Return processed_frame
         """
         
-        ret, frame = self.cap.read()
-        if not ret:
+        frames = self.camera_manager.read_all()
+        frame = frames.get("camera_0")
+        if frame is None:
             return None
         
         # STEP 1: RESIZE
