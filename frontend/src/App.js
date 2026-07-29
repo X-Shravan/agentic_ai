@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import io from 'socket.io-client';
 import Sidebar from './components/Sidebar';
@@ -10,33 +10,36 @@ import AlertsPanel from './components/AlertsPanel';
 import Analytics from './components/Analytics';
 import InsightsPanel from './components/InsightsPanel';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || ''; // Leave empty for api_simple.py HTTP polling mode
 
-function App() {
-  const [dashboardData, setDashboardData] = useState({
-    total_students: 0,
-    active_ids: 0,
-    total_alerts: 0,
-    normal_students: 0,
-    alerts: [],
-    cheating_types: {},
-    monitoring_time: '00:00:00',
-    system_status: {
-      monitoring: 'Initializing',
-      detection: 'Initializing',
-      camera: 'Disconnected',
-      ai_model: 'Loading'
-    },
-    system_running: false
-  });
+const INITIAL_DASHBOARD_DATA = {
+  total_students: 0,
+  active_ids: 0,
+  total_alerts: 0,
+  normal_students: 0,
+  alerts: [],
+  cheating_types: {},
+  monitoring_time: '00:00:00',
+  system_status: {
+    monitoring: 'Initializing',
+    detection: 'Initializing',
+    camera: 'Disconnected',
+    ai_model: 'Loading'
+  },
+  system_running: false
+};
 
+const INITIAL_TIMELINE_DATA = {
+  timestamps: [],
+  alert_counts: []
+};
+
+function useBackendData() {
+  const [dashboardData, setDashboardData] = useState(INITIAL_DASHBOARD_DATA);
   const [isConnected, setIsConnected] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
-  const [timelineData, setTimelineData] = useState({
-    timestamps: [],
-    alert_counts: []
-  });
+  const [timelineData, setTimelineData] = useState(INITIAL_TIMELINE_DATA);
 
   useEffect(() => {
     // Connect to SocketIO only when a Socket.IO backend is configured.
@@ -71,8 +74,8 @@ function App() {
       setIsConnected(true);
     });
 
-    socket.on('connection_response', (data) => {
-      console.log('✅ Connection response:', data);
+    socket.on('connection_response', () => {
+      console.log('✅ Connection response received');
       setIsConnected(true);
     });
 
@@ -88,38 +91,36 @@ function App() {
     return () => socket.close();
   }, []);
 
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/dashboard`);
+      if (response.ok) {
+        const data = await response.json();
+        setDashboardData(data);
+        setIsConnected(true);
+      }
+    } catch (error) {
+      console.log('Waiting for API server...');
+      if (!socketConnected) {
+        setIsConnected(false);
+      }
+    }
+  }, [socketConnected]);
+
+  const fetchTimeline = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/analytics/timeline`);
+      if (response.ok) {
+        const data = await response.json();
+        setTimelineData(data);
+      }
+    } catch (error) {
+      // Silent error for timeline fetch
+    }
+  }, []);
+
   // Fetch data periodically via HTTP (as fallback and for initial/cached data)
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`${API_URL}/dashboard`);
-        if (response.ok) {
-          const data = await response.json();
-          setDashboardData(data);
-          setIsConnected(true);
-        }
-      } catch (error) {
-        console.log('Waiting for API server...');
-        if (!socketConnected) {
-          setIsConnected(false);
-        }
-      }
-    };
-
-    // Fetch timeline data for peak cheating time calculation
-    const fetchTimeline = async () => {
-      try {
-        const response = await fetch(`${API_URL}/analytics/timeline`);
-        if (response.ok) {
-          const data = await response.json();
-          setTimelineData(data);
-        }
-      } catch (error) {
-        // Silent error for timeline fetch
-      }
-    };
-
-    // Initial fetch
     fetchData();
     fetchTimeline();
 
@@ -131,7 +132,13 @@ function App() {
       clearInterval(dashboardInterval);
       clearInterval(timelineInterval);
     };
-  }, [socketConnected]);
+  }, [fetchData, fetchTimeline]);
+
+  return { dashboardData, isConnected, timelineData };
+}
+
+function App() {
+  const { dashboardData, isConnected, timelineData } = useBackendData();
 
   return (
     <div className="min-h-screen bg-dark-bg text-white flex">
@@ -196,8 +203,8 @@ function App() {
             transition={{ duration: 0.5, delay: 0.8 }}
             className="col-span-12 lg:col-span-4"
           >
-            <InsightsPanel 
-              monitoringTime={dashboardData.monitoring_time} 
+            <InsightsPanel
+              monitoringTime={dashboardData.monitoring_time}
               cheatingTypes={dashboardData.cheating_types}
               timelineData={timelineData}
             />
