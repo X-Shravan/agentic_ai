@@ -47,29 +47,25 @@ function useBackendData() {
       return undefined;
     }
 
-    const socket = io(SOCKET_URL, {
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5
-    });
-
-    socket.on('connect', () => {
-      console.log('✅ Connected to WebSocket');
-      setSocketConnected(true);
-      socket.emit('request_update');
-    });
-
-    socket.on('surveillance_update', (data) => {
-      console.log('📊 Received update:', data);
-      setDashboardData(prevData => ({
-        ...prevData,
-        total_students: data.total_students || prevData.total_students,
-        active_ids: data.active_ids || prevData.active_ids,
-        total_alerts: data.total_alerts || prevData.total_alerts,
-        normal_students: data.normal_students || prevData.normal_students,
-        alerts: data.alerts || prevData.alerts,
-        cheating_types: data.cheating_types || prevData.cheating_types,
+  const refresh = useCallback(async () => {
+    try {
+      const [students, cameras, alerts, evidence, reports, health, analytics, webrtc] = await Promise.allSettled([
+        fetchJson('/students'), fetchJson('/cameras'), fetchJson('/alerts'), fetchJson('/alerts/evidence'),
+        fetchJson('/reports'), fetchJson('/health'), fetchJson('/analytics/dashboard'), fetchJson('/webrtc/cameras/status')
+      ]);
+      setState((prev) => ({
+        ...prev,
+        students: students.status === 'fulfilled' ? asArray(students.value) : prev.students,
+        cameras: cameras.status === 'fulfilled' ? asArray(cameras.value) : prev.cameras,
+        alerts: alerts.status === 'fulfilled' ? asArray(alerts.value) : prev.alerts,
+        evidence: evidence.status === 'fulfilled' ? asArray(evidence.value) : prev.evidence,
+        reports: reports.status === 'fulfilled' ? asArray(reports.value) : prev.reports,
+        health: health.status === 'fulfilled' ? health.value : prev.health,
+        analytics: analytics.status === 'fulfilled' ? analytics.value : prev.analytics,
+        webrtc: webrtc.status === 'fulfilled' ? webrtc.value : prev.webrtc,
+        loading: false,
+        error: [students, cameras, alerts, evidence, reports, health, analytics].find((r) => r.status === 'rejected')?.reason?.message || null,
+        lastSync: new Date().toISOString(),
       }));
       setIsConnected(true);
     });
@@ -88,8 +84,11 @@ function useBackendData() {
       console.log('⚠️ Connection error:', error);
     });
 
-    return () => socket.close();
-  }, []);
+  useEffect(() => {
+    refresh();
+    const id = setInterval(refresh, 4000);
+    return () => clearInterval(id);
+  }, [refresh]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -124,13 +123,35 @@ function useBackendData() {
     fetchData();
     fetchTimeline();
 
-    // Set up polling intervals (less frequent now that we have WebSocket)
-    const dashboardInterval = setInterval(fetchData, 2000);
-    const timelineInterval = setInterval(fetchTimeline, 3000);
+  const selectedStudent = useMemo(() => data.students.find((s) => s.student_id === selectedStudentId) || data.students[0], [data.students, selectedStudentId]);
 
-    return () => {
-      clearInterval(dashboardInterval);
-      clearInterval(timelineInterval);
+  useEffect(() => { if (selectedStudent && !selectedStudentId) setSelectedStudentId(selectedStudent.student_id); }, [selectedStudent, selectedStudentId]);
+  useEffect(() => {
+    if (!selectedStudentId) return;
+    data.fetchJson(`/students/${selectedStudentId}`).then(setStudentDetail).catch(() => setStudentDetail(selectedStudent || null));
+  }, [selectedStudentId, data.fetchJson, selectedStudent]);
+
+  const metrics = useMemo(() => {
+    const online = data.cameras.filter((c) => ['streaming', 'online', 'registered'].includes(String(c.status).toLowerCase())).length;
+    const highAlerts = data.alerts.filter((a) => ['high', 'critical'].includes(String(a.severity || a.risk_level).toLowerCase()) || Number(a.risk_score) >= 60).length;
+    const avgFps = data.cameras.length ? data.cameras.reduce((sum, c) => sum + Number(c.fps || 0), 0) / data.cameras.length : 0;
+    const avgRisk = data.alerts.length ? data.alerts.reduce((sum, a) => sum + Number(a.risk_score || a.score || 0), 0) / data.alerts.length : 0;
+    return [
+      ['Students Present', data.students.length, `${data.students.filter((s) => s.seat).length} seated`, Users],
+      ['Students Detected', data.analytics?.total_students ?? data.students.filter((s) => s.tracking_id).length, 'YOLO tracked IDs', Shield],
+      ['Active Cameras', online, `${data.cameras.length} registered`, Camera],
+      ['Active Alerts', data.alerts.length, `${highAlerts} high/critical`, AlertTriangle],
+      ['AI Confidence', pct(100 - Math.min(avgRisk, 100)), 'from risk distribution', Brain],
+      ['Average FPS', avgFps.toFixed(1), 'camera heartbeat', Gauge],
+    ];
+  }, [data]);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return {
+      students: data.students.filter((s) => JSON.stringify(s).toLowerCase().includes(q)),
+      alerts: data.alerts.filter((a) => JSON.stringify(a).toLowerCase().includes(q)),
+      cameras: data.cameras.filter((c) => JSON.stringify(c).toLowerCase().includes(q)),
     };
   }, [fetchData, fetchTimeline]);
 
