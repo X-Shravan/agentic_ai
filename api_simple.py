@@ -6,19 +6,39 @@ import threading
 import time
 from datetime import datetime
 from collections import deque, defaultdict
-import cv2
 import base64
 import io
 
 # Import surveillance system
 import sys
+from importlib.util import find_spec
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
-try:
-    from main import ExamSurveillanceSystem
-except:
-    print("⚠️ Could not import surveillance system")
+missing_cv_dependencies = [
+    package_name
+    for package_name in ("cv2", "ultralytics")
+    if find_spec(package_name) is None
+]
+
+if missing_cv_dependencies:
+    ExamSurveillanceSystem = None
+    print(
+        "⚠️ Could not import surveillance system: "
+        f"missing {', '.join(missing_cv_dependencies)}"
+    )
+else:
+    try:
+        import cv2
+        import ultralytics  # noqa: F401
+
+        if not hasattr(cv2, "imshow"):
+            raise ImportError("cv2.imshow is unavailable; install opencv-python instead of opencv-python-headless")
+
+        from backend.legacy_runner import ExamSurveillanceSystem
+    except Exception as import_error:
+        ExamSurveillanceSystem = None
+        print(f"⚠️ Could not import surveillance system: {import_error}")
 
 # ===================================================
 # SIMPLE HTTP SERVER (NO FLASK REQUIRED)
@@ -41,7 +61,23 @@ class DashboardData:
 dashboard_data = DashboardData()
 surveillance_system = None
 
+PLACEHOLDER_JPEG = base64.b64decode(
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAH/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAEFAqf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/ASP/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/ASP/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAY/Aqf/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/IV//2gAMAwEAAgADAAAAEP/EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8QH//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8QH//EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEAAT8QH//Z"
+)
+
+def placeholder_frame_bytes(message="Waiting for camera"):
+    """Return a tiny JPEG placeholder so the dashboard does not receive 404s."""
+    return PLACEHOLDER_JPEG
+
+
 class DashboardHandler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
     def do_GET(self):
         parsed_path = urlparse(self.path)
         path = parsed_path.path
@@ -73,21 +109,36 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 },
                 'timestamp': datetime.now().isoformat()
             })
+        elif path == '/api/alerts':
+            self.send_json({'alerts': dashboard_data.alerts, 'total': len(dashboard_data.alerts)})
+        elif path == '/api/alerts/evidence':
+            self.send_json([])
+        elif path == '/api/cameras':
+            self.send_json([{'camera_id': 'demo_cam', 'name': 'Demo Camera', 'type': 'webcam', 'status': dashboard_data.system_status if hasattr(dashboard_data, 'system_status') else 'connected', 'fps': 30, 'resolution': [1280, 720], 'enabled': True}])
+        elif path == '/api/students':
+            self.send_json([{'student_id': str(track_id), 'tracking_id': track_id, 'name': f'Student {track_id}'} for track_id in dashboard_data.active_ids])
+        elif path == '/api/reports':
+            self.send_json([])
+        elif path == '/api/agents/status':
+            self.send_json({'agents': [{'name': name, 'status': 'running' if ExamSurveillanceSystem is not None else 'unavailable'} for name in ['Detection Agent', 'Tracking Agent', 'Behavior Agent', 'Risk Agent']]})
         elif path == '/api/analytics/timeline':
             self.send_json({
                 'timestamps': list(dashboard_data.timestamps),
                 'alert_counts': list(dashboard_data.alert_counts)
             })
         elif path == '/api/camera/frame':
-            if dashboard_data.current_frame_b64:
-                frame_data = base64.b64decode(dashboard_data.current_frame_b64)
-                self.send_response(200)
-                self.send_header('Content-Type', 'image/jpeg')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(frame_data)
-            else:
-                self.send_error(404, 'No frame available')
+            frame_data = (
+                base64.b64decode(dashboard_data.current_frame_b64)
+                if dashboard_data.current_frame_b64
+                else placeholder_frame_bytes('Waiting for Camo/mobile camera')
+            )
+            self.send_response(200)
+            self.send_header('Content-Type', 'image/jpeg')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(frame_data)
+        elif path.startswith('/socket.io/'):
+            self.send_json({'ok': False, 'message': 'Socket.IO is disabled in api_simple.py; HTTP polling is active.'})
         else:
             self.send_error(404, 'Not Found')
     
@@ -108,7 +159,11 @@ def surveillance_loop():
     print("🚀 Starting Surveillance System...")
     
     try:
-        surveillance_system = ExamSurveillanceSystem(config_path="config/config.yaml", demo_mode=True)
+        if ExamSurveillanceSystem is None:
+            print("⚠️ Surveillance backend unavailable; API will serve dashboard placeholders")
+            return
+
+        surveillance_system = ExamSurveillanceSystem(config_path="backend/core/config.yaml", demo_mode=True)
         
         if not surveillance_system.start():
             print("❌ Failed to start surveillance system")
@@ -173,6 +228,7 @@ def surveillance_loop():
                 # Store frame for streaming with detection visualization
                 if frame is not None:
                     try:
+                        import cv2
                         # Draw bounding boxes on frame
                         annotated_frame = frame.copy()
                         for track in tracks:
@@ -217,8 +273,8 @@ if __name__ == '__main__':
     surveillance_thread.start()
     
     # Start HTTP server
-    server = HTTPServer(('0.0.0.0', 5000), DashboardHandler)
-    print("🚀 API Server running on http://localhost:5000")
+    server = HTTPServer(('0.0.0.0', 8080), DashboardHandler)
+    print("🚀 API Server running on http://localhost:8080")
     print("📊 Dashboard: http://localhost:3000")
     
     try:

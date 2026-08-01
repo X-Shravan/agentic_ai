@@ -11,6 +11,8 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 from email import encoders
 from datetime import datetime
+from dotenv import load_dotenv
+
 
 
 class SurveillanceEmailSender:
@@ -252,71 +254,62 @@ def setup_email_config(sender_email, app_password, recipient_email):
 # ================================================================
 # COMMAND-LINE SETUP
 # ================================================================
-
+load_dotenv()
 def interactive_setup():
-    """Interactive email configuration setup"""
-    print("\n" + "="*60)
-    print("📧 AI SURVEILLANCE EMAIL SETUP")
-    print("="*60)
-    
-    print("\n📋 This setup will configure your Gmail account for reports\n")
-    
-    print("⚠️  Important:")
-    print("  • Use Gmail App Password (NOT your regular Gmail password)")
-    print("  • Generate one at: https://myaccount.google.com/apppasswords")
-    print("  • Ensure 'Less secure app access' is disabled\n")
-    
-    # Get inputs
-    sender_email = input("Enter your Gmail address: ").strip()
-    app_password = input("Enter your Gmail App Password: ").strip()
-    recipient_email = input("Enter recipient email (or leave blank to use sender): ").strip()
-    
+    """Load email configuration from .env and test it"""
+
+    sender_email = os.getenv("EMAIL_USER")
+    app_password = os.getenv("EMAIL_PASSWORD")
+    recipient_email = os.getenv("RECIPIENT_EMAIL")
+
+    # Validate
+    if not sender_email:
+        print("❌ EMAIL_USER not found in .env")
+        return False
+
+    if not app_password:
+        print("❌ EMAIL_PASSWORD not found in .env")
+        return False
+
     if not recipient_email:
         recipient_email = sender_email
-    
-    # Validate
-    if not sender_email or '@' not in sender_email:
-        print("❌ Invalid email address")
-        return False
-    
-    if not app_password or len(app_password) < 16:
-        print("❌ Invalid app password (should be 16+ characters)")
-        return False
-    
-    # Test connection
+
+    print("\n" + "=" * 60)
+    print("📧 AI SURVEILLANCE EMAIL SETUP")
+    print("=" * 60)
+
+    print(f"\n📤 Sender Email    : {sender_email}")
+    print(f"📥 Recipient Email : {recipient_email}")
+
     print("\n🔧 Testing email configuration...")
-    sender = SurveillanceEmailSender(sender_email, app_password)
-    
-    # Create test message
-    test_msg = MIMEText("This is a test email from AI Surveillance System")
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = recipient_email
-    msg['Subject'] = "Test: AI Surveillance System"
-    msg.attach(test_msg)
-    
+
     try:
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
             server.login(sender_email, app_password)
-            print("✅ Authentication successful!")
-        
-        # Save config
-        if setup_email_config(sender_email, app_password, recipient_email):
-            print("\n✅ Email configuration saved successfully!")
+
+        print("✅ Authentication successful!")
+
+        if setup_email_config(
+            sender_email,
+            app_password,
+            recipient_email
+        ):
+            print("\n✅ Email configuration loaded successfully!")
             print(f"📧 Reports will be sent to: {recipient_email}")
             return True
-        
+
     except Exception as e:
         print(f"❌ Test failed: {e}")
+
         print("\nPlease check:")
-        print("  • Gmail address is correct")
-        print("  • App Password is correct (NOT regular Gmail password)")
-        print("  • 'Less secure app access' is disabled")
-        print("  • 2FA is enabled on your Gmail account")
+        print("  • EMAIL_USER is correct")
+        print("  • EMAIL_PASSWORD is Gmail App Password")
+        print("  • 2-Step Verification is enabled")
+        print("  • App Password is active")
+
         return False
 
 
 if __name__ == "__main__":
-    # Run interactive setup
     interactive_setup()

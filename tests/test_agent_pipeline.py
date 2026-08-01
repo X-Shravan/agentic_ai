@@ -1,6 +1,6 @@
-from agents.behavior_analysis_agent import BehaviorAnalysis, BehaviorEvent, BehaviorType
-from agents.decision_agent import AlertLevel, DecisionAgent
-from agents.risk_scoring_agent import RiskScoringAgent
+from backend.agents.behavior_analysis_agent import BehaviorAnalysis, BehaviorEvent, BehaviorType
+from backend.agents.decision_agent import AlertLevel, DecisionAgent
+from backend.agents.risk_scoring_agent import RiskScoringAgent
 
 
 def test_decision_agent_threshold_levels():
