@@ -1,0 +1,33 @@
+{
+  "evidence_id": "EV_20260924_114147_0FA2E",
+  "incident_id": "EV_20260924_114147_0FA2E",
+  "student_id": "webcam_0_106",
+  "student": "webcam_0_106",
+  "tracking_id": 106,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-24T06:11:48.220542+00:00",
+  "behaviour": "Repeated student interaction (HIGH) \u2014 review recommended.",
+  "event": "Repeated student interaction (HIGH) \u2014 review recommended.",
+  "confidence": 0.9095802903175354,
+  "risk_score": 78.0,
+  "evidence_image_path": "storage\\evidence\\2026-09-24\\webcam_0\\webcam_0_106\\EV_20260924_114147_0FA2E.jpg",
+  "alert_id": "88cd40fa-7ef2-4cdb-b7bc-ec9193befa5c",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-24\\webcam_0\\webcam_0_106\\EV_20260924_114147_0FA2E.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-24\\webcam_0\\webcam_0_106\\EV_20260924_114147_0FA2E_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-24\\webcam_0\\webcam_0_106\\EV_20260924_114147_0FA2E.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-24\\webcam_0\\webcam_0_106\\EV_20260924_114147_0FA2E.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-24\\webcam_0\\webcam_0_106\\EV_20260924_114147_0FA2E_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-24\\webcam_0\\webcam_0_106\\EV_20260924_114147_0FA2E_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_student_interaction"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n78.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Confirmed behavior pattern: Repeated Student Interaction\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Escalate to Invigilator"
+  }
+}

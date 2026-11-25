@@ -54,7 +54,7 @@ class FaceAnalysisAgent:
         self.yaw_threshold = yaw_threshold
         self.pitch_threshold = pitch_threshold
         self.history: Dict[str, Deque[Tuple[float, float, float]]] = defaultdict(lambda: deque(maxlen=max_history))
-        self.mp_face_mesh = mp.solutions.face_mesh if mp else None
+        self.mp_face_mesh = getattr(mp, "solutions", None).face_mesh if getattr(mp, "solutions", None) else None
         self.face_mesh = None
         if self.mp_face_mesh:
             self.face_mesh = self.mp_face_mesh.FaceMesh(
@@ -64,6 +64,9 @@ class FaceAnalysisAgent:
                 min_detection_confidence=0.5,
                 min_tracking_confidence=0.5,
             )
+        else:
+            logger = __import__("logging").getLogger(__name__)
+            logger.warning("⚠️ MediaPipe face mesh solutions unavailable; face analysis will run in fallback mode")
 
     def analyze(self, frame: np.ndarray, track: Any = None) -> Dict[str, Any]:
         if frame is None or self.face_mesh is None:
@@ -120,10 +123,23 @@ class FaceAnalysisAgent:
             return frame, (0, 0)
         x1, y1, x2, y2 = [int(v) for v in bbox]
         h, w = frame.shape[:2]
-        pad_x, pad_y = int((x2 - x1) * 0.08), int((y2 - y1) * 0.08)
-        x1, y1 = max(0, x1 - pad_x), max(0, y1 - pad_y)
-        x2, y2 = min(w, x2 + pad_x), min(h, y2 + pad_y)
-        return frame[y1:y2, x1:x2], (x1, y1)
+        
+        # Focus on head/upper-torso region (top 45% of person height with headroom)
+        person_h = max(20, y2 - y1)
+        head_h = int(person_h * 0.45)
+        pad_x = int((x2 - x1) * 0.10)
+        pad_y = int(person_h * 0.08)
+        
+        x1_c = max(0, x1 - pad_x)
+        x2_c = min(w, x2 + pad_x)
+        y1_c = max(0, y1 - pad_y)
+        y2_c = min(h, y1 + head_h)
+        
+        crop = frame[y1_c:y2_c, x1_c:x2_c]
+        if crop.shape[0] < 20 or crop.shape[1] < 20:
+            crop = frame[max(0, y1):min(h, y2), max(0, x1):min(w, x2)]
+            return crop, (max(0, x1), max(0, y1))
+        return crop, (x1_c, y1_c)
 
     def _track_key(self, track: Any) -> str:
         if isinstance(track, dict):

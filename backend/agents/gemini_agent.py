@@ -66,7 +66,7 @@ class GeminiReasoningEngine:
         "evidence_id",
     }
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.0-flash"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-flash-latest"):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         self.model_name = model
         self.model = None
@@ -80,11 +80,17 @@ class GeminiReasoningEngine:
         if not self.model:
             return self._fallback_analysis(payload)
         try:
-            response = await asyncio.to_thread(self._call_gemini, self._prompt(payload))
+            response = await asyncio.wait_for(
+                asyncio.to_thread(self._call_gemini, self._prompt(payload)),
+                timeout=3.0,
+            )
             parsed = self._parse_gemini_response(response)
             if "error" in parsed:
                 return self._fallback_analysis(payload)
             return parsed
+        except asyncio.TimeoutError:
+            logger.warning("Gemini request timed out after 3.0s, using local fallback reasoning")
+            return self._fallback_analysis(payload)
         except Exception as exc:
             logger.warning("Gemini unavailable, using local reasoning: %s", exc)
             return self._fallback_analysis(payload)
@@ -123,7 +129,17 @@ INPUT:
 {json.dumps(payload, indent=2, default=str)}
 
 Return valid JSON with:
-- ai_explanation
+- ai_explanation: must strictly follow this structured text template:
+Risk Score:
+[risk_score] / 100 ([risk_level])
+
+Contributing Factors
+• [Factor 1]
+• [Factor 2]
+...
+
+Recommendation
+[Recommendation text]
 - risk_interpretation
 - event_summary
 - recommendation
@@ -221,17 +237,41 @@ Return valid JSON with executive_summary, student_summary, risk_assessment, ai_f
         }
 
     def _compose_explanation(self, metadata: Dict[str, Any], risk_score: float, level: str, summary: str) -> str:
-        parts = [f"Student {metadata.get('student_id', 'UNKNOWN')} has a {level} risk score of {risk_score:.0f}."]
-        if metadata.get("mobile_detected"):
-            parts.append("A mobile-device signal was present.")
-        if metadata.get("eye_gaze"):
-            parts.append(f"Eye gaze was classified as {metadata.get('eye_gaze')}.")
-        if metadata.get("head_pose"):
-            parts.append(f"Head pose was classified as {metadata.get('head_pose')}.")
-        if metadata.get("pose"):
-            parts.append(f"Pose signal was {metadata.get('pose')}.")
-        parts.append(summary)
-        return " ".join(parts)
+        behaviors = metadata.get("behaviors") or []
+        gaze = metadata.get("eye_gaze") or metadata.get("gaze") or "UNKNOWN"
+        head_pose = metadata.get("head_pose") or "UNKNOWN"
+        pose = metadata.get("pose") or "UNKNOWN"
+        
+        # Build contributing factors list
+        factors = []
+        if metadata.get("mobile_detected") or "phone_detected" in behaviors:
+            factors.append("• Mobile device detected continuously in the vicinity")
+        if gaze in {"LEFT", "RIGHT", "DOWN"}:
+            factors.append(f"• Repeated eye gaze shifts detected towards the {gaze.lower()}")
+        if head_pose not in {"UNKNOWN", "CENTER", "NORMAL"}:
+            factors.append(f"• Head turned repeatedly or tilted ({head_pose})")
+        if pose not in {"UNKNOWN", "CENTER", "NORMAL"}:
+            factors.append(f"• Leaning posture or wrist/arm movement below desk height detected")
+        for b in behaviors:
+            if b not in {"phone_detected", "cell_phone", "using_mobile", "mobile_detected"}:
+                b_name = b.replace("_", " ").title()
+                factors.append(f"• Confirmed behavior pattern: {b_name}")
+            
+        if not factors:
+            factors.append("• Isolated suspicious activity trigger")
+
+        factors_str = "\n".join(factors)
+        recommendation = "Immediate invigilator review." if level in {"HIGH", "CRITICAL"} else "Continue monitoring."
+        
+        explanation = f"""Risk Score:
+{risk_score:.1f} / 100 ({level})
+
+Contributing Factors
+{factors_str}
+
+Recommendation
+{recommendation}"""
+        return explanation
 
     def _false_positive_text(self, metadata: Dict[str, Any], strength: str) -> str:
         if strength == "weak":

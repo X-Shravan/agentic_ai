@@ -12,7 +12,7 @@ from pathlib import Path
 # Add project to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from agents.detection_agent import DetectionAgent
+from backend.agents.detection_agent import DetectionAgent
 import yaml
 
 # Load config

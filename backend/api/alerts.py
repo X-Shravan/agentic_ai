@@ -65,6 +65,14 @@ async def create_alert(alert: AlertCreate):
         "recommendation": reasoning.get("recommendation"),
         "evidence_captured": bool(alert.evidence),
     }
+    
+    if alert.evidence:
+        evidence_payload = dict(alert.evidence)
+        evidence_payload["alert_id"] = alert_id
+        if "evidence_id" not in evidence_payload:
+            evidence_payload["evidence_id"] = f"EV{uuid.uuid4().hex[:10].upper()}"
+        store.upsert("evidence", "evidence_id", evidence_payload)
+        
     item = store.upsert("alerts", "alert_id", payload)
     store.append("risk_scores", {
         "student_id": alert.student_id,

@@ -8,11 +8,24 @@ from datetime import datetime
 from collections import deque, defaultdict
 import base64
 import io
+import os
+import math
 
 # Import surveillance system
 import sys
 from importlib.util import find_spec
 from pathlib import Path
+
+def configure_console_output():
+    """Avoid UnicodeEncodeError for emoji logs on Windows/piped output."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+
+configure_console_output()
 sys.path.insert(0, str(Path(__file__).parent))
 
 missing_cv_dependencies = [
@@ -57,6 +70,9 @@ class DashboardData:
         self.current_frame_b64 = None
         self.monitoring_start_time = datetime.now()
         self.tracks_with_frames = []  # Store track info for drawing
+        self.camera_status = "Starting"
+        self.camera_message = "Starting surveillance camera feed"
+        self.synthetic_frame_count = 0
 
 dashboard_data = DashboardData()
 surveillance_system = None
@@ -68,6 +84,50 @@ PLACEHOLDER_JPEG = base64.b64decode(
 def placeholder_frame_bytes(message="Waiting for camera"):
     """Return a tiny JPEG placeholder so the dashboard does not receive 404s."""
     return PLACEHOLDER_JPEG
+
+
+def generate_synthetic_frame_bytes(message="Simulation camera active"):
+    """Generate a JPEG simulation frame when the full CV pipeline is unavailable."""
+    try:
+        import cv2
+        import numpy as np
+    except Exception:
+        return placeholder_frame_bytes(message)
+
+    dashboard_data.synthetic_frame_count += 1
+    tick = dashboard_data.synthetic_frame_count
+    height, width = 640, 640
+    frame = np.zeros((height, width, 3), dtype=np.uint8)
+
+    for y in range(height):
+        shade = int(24 + (y / height) * 36)
+        frame[y, :] = (shade, shade, shade + 10)
+
+    cv2.rectangle(frame, (28, 28), (width - 28, 112), (35, 70, 55), -1)
+    cv2.rectangle(frame, (28, 28), (width - 28, 112), (90, 170, 135), 2)
+    cv2.putText(frame, "AI Exam Surveillance", (65, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.85, (220, 255, 230), 2)
+    cv2.putText(frame, message[:58], (65, 96), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (190, 225, 255), 1)
+
+    for row, desk_y in enumerate([230, 390, 540]):
+        cv2.rectangle(frame, (60, desk_y), (width - 60, desk_y + 35), (75, 55, 40), -1)
+        cv2.line(frame, (60, desk_y), (width - 60, desk_y), (120, 90, 70), 2)
+        for col in range(4):
+            base_x = 115 + col * 135
+            wobble = int(8 * math.sin((tick / 12.0) + row + col))
+            cv2.circle(frame, (base_x + wobble, desk_y - 42), 22, (80, 150, 210), -1)
+            cv2.rectangle(frame, (base_x - 24 + wobble, desk_y - 20), (base_x + 24 + wobble, desk_y + 25), (70, 115, 185), -1)
+            cv2.rectangle(frame, (base_x - 44 + wobble, desk_y - 75), (base_x + 44 + wobble, desk_y + 28), (0, 190, 80), 2)
+            cv2.putText(frame, f"ID {row * 4 + col + 1}", (base_x - 31 + wobble, desk_y - 82), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 230, 120), 1)
+
+    phone_x = 95 + int((tick * 4) % (width - 190))
+    cv2.rectangle(frame, (phone_x, 160), (phone_x + 24, 205), (40, 40, 230), -1)
+    cv2.rectangle(frame, (phone_x, 160), (phone_x + 24, 205), (255, 255, 255), 1)
+    cv2.putText(frame, "SIM LIVE", (width - 145, height - 28), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+
+    ok, buffer = cv2.imencode('.jpg', frame)
+    if not ok:
+        return placeholder_frame_bytes(message)
+    return buffer.tobytes()
 
 
 class DashboardHandler(BaseHTTPRequestHandler):
@@ -102,11 +162,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 'cheating_types': dict(dashboard_data.cheating_types),
                 'monitoring_time': f"{hours:02d}:{minutes:02d}:{seconds:02d}",
                 'system_status': {
-                    "monitoring": "Active",
-                    "detection": "Running",
-                    "camera": "Connected",
-                    "ai_model": "Initialized"
+                    "monitoring": "Active" if surveillance_system else "Simulation",
+                    "detection": "Running" if surveillance_system else "Fallback",
+                    "camera": dashboard_data.camera_status,
+                    "ai_model": "Initialized" if surveillance_system else "Unavailable"
                 },
+                'camera_message': dashboard_data.camera_message,
                 'timestamp': datetime.now().isoformat()
             })
         elif path == '/api/analytics/timeline':
@@ -114,14 +175,25 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 'timestamps': list(dashboard_data.timestamps),
                 'alert_counts': list(dashboard_data.alert_counts)
             })
+        elif path == '/api/analytics/cheating-types':
+            self.send_json({
+                'cheating_types': dict(dashboard_data.cheating_types),
+                'total_alerts': len(dashboard_data.alerts),
+                'timestamp': datetime.now().isoformat()
+            })
         elif path == '/api/camera/frame':
-            frame_data = (
-                base64.b64decode(dashboard_data.current_frame_b64)
-                if dashboard_data.current_frame_b64
-                else placeholder_frame_bytes('Waiting for Camo/mobile camera')
-            )
+            if dashboard_data.current_frame_b64:
+                frame_data = base64.b64decode(dashboard_data.current_frame_b64)
+            elif dashboard_data.camera_status == "Simulation":
+                frame_data = generate_synthetic_frame_bytes(dashboard_data.camera_message)
+            else:
+                frame_data = placeholder_frame_bytes(dashboard_data.camera_message)
             self.send_response(200)
             self.send_header('Content-Type', 'image/jpeg')
+            self.send_header('Cache-Control', 'no-store, max-age=0')
+            self.send_header('Access-Control-Expose-Headers', 'X-Camera-Status, X-Camera-Message')
+            self.send_header('X-Camera-Status', dashboard_data.camera_status)
+            self.send_header('X-Camera-Message', dashboard_data.camera_message)
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(frame_data)
@@ -148,16 +220,37 @@ def surveillance_loop():
     
     try:
         if ExamSurveillanceSystem is None:
-            print("⚠️ Surveillance backend unavailable; API will serve dashboard placeholders")
+            dashboard_data.camera_status = "Simulation"
+            dashboard_data.camera_message = (
+                "Surveillance backend unavailable; using dashboard simulation feed. "
+                f"Missing/unavailable dependencies: {', '.join(missing_cv_dependencies) or 'import error'}"
+            )
+            print(f"⚠️ {dashboard_data.camera_message}")
             return
 
         surveillance_system = ExamSurveillanceSystem(config_path="backend/core/config.yaml", demo_mode=True)
         
         if not surveillance_system.start():
-            print("❌ Failed to start surveillance system")
+            dashboard_data.camera_status = "Simulation"
+            dashboard_data.camera_message = "Failed to start camera source; using dashboard simulation feed"
+            print(f"❌ {dashboard_data.camera_message}")
             return
         
         print("✅ Surveillance System Started")
+        if getattr(surveillance_system.surveillance_agent, "synthetic_mode", False):
+            dashboard_data.camera_status = "Simulation"
+            dashboard_data.camera_message = getattr(
+                surveillance_system.surveillance_agent,
+                "last_error",
+                "Using synthetic simulation camera feed"
+            )
+        else:
+            dashboard_data.camera_status = "Connected"
+            dashboard_data.camera_message = getattr(
+                surveillance_system.surveillance_agent,
+                "source_label",
+                "Camera feed connected"
+            )
         
         frame_count = 0
         
@@ -217,6 +310,20 @@ def surveillance_loop():
                 if frame is not None:
                     try:
                         import cv2
+                        if getattr(surveillance_system.surveillance_agent, "synthetic_mode", False):
+                            dashboard_data.camera_status = "Simulation"
+                            dashboard_data.camera_message = getattr(
+                                surveillance_system.surveillance_agent,
+                                "last_error",
+                                "Using synthetic simulation camera feed"
+                            )
+                        else:
+                            dashboard_data.camera_status = "Connected"
+                            dashboard_data.camera_message = getattr(
+                                surveillance_system.surveillance_agent,
+                                "source_label",
+                                "Camera feed connected"
+                            )
                         # Draw bounding boxes on frame
                         annotated_frame = frame.copy()
                         for track in tracks:
@@ -261,8 +368,9 @@ if __name__ == '__main__':
     surveillance_thread.start()
     
     # Start HTTP server
-    server = HTTPServer(('0.0.0.0', 5000), DashboardHandler)
-    print("🚀 API Server running on http://localhost:5000")
+    port = int(os.getenv("SIMPLE_API_PORT", "8080"))
+    server = HTTPServer(('0.0.0.0', port), DashboardHandler)
+    print(f"🚀 API Server running on http://localhost:{port}")
     print("📊 Dashboard: http://localhost:3000")
     
     try:

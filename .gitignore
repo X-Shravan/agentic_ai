@@ -41,7 +41,8 @@ Lib/
 # ==================================================
 # LOGS
 # ==================================================
-logs/
+logs/*
+!logs/.gitkeep
 *.log
 
 # ==================================================
@@ -112,10 +113,14 @@ final_dataset.zip
 # ==================================================
 # EVIDENCE & REPORTS
 # ==================================================
-evidence/
+evidence/*
+!evidence/.gitkeep
 evidence_clips/
 screenshots/
-reports/
+reports/*
+!reports/.gitkeep
+archived_reports/*
+!archived_reports/.gitkeep
 
 # ==================================================
 # TEMP FILES
@@ -164,6 +169,7 @@ secrets.json
 credentials.json
 serviceAccountKey.json
 firebase-adminsdk.json
+email_config.txt
 
 # ==================================================
 # GEMINI / OPENAI KEYS
@@ -175,6 +181,7 @@ config.py
 # WINDOWS BATCH FILES
 # ==================================================
 *.bat
+!SETUP.bat
 
 # ==================================================
 # MISC
@@ -200,3 +207,16 @@ config.py
 !docker-compose.yml
 !package.json
 !package-lock.json
+
+# TypeScript generated files
+*.tsbuildinfo
+
+# Next.js generated files
+next-env.d.ts
+
+# Runtime-generated files
+runtime_logs/
+
+*.tsbuildinfo
+next-env.d.ts
+runtime_logs/

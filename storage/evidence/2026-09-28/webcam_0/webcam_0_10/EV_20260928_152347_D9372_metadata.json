@@ -1,0 +1,34 @@
+{
+  "evidence_id": "EV_20260928_152347_D9372",
+  "incident_id": "EV_20260928_152347_D9372",
+  "student_id": "webcam_0_10",
+  "student": "webcam_0_10",
+  "tracking_id": 10,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-28T09:53:47.645472+00:00",
+  "behaviour": "Repeated head turning (HIGH) \u2014 review recommended.",
+  "event": "Repeated head turning (HIGH) \u2014 review recommended.",
+  "confidence": 0.9413933157920837,
+  "risk_score": 75.0,
+  "evidence_image_path": "storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_10\\EV_20260928_152347_D9372.jpg",
+  "alert_id": "f3ea85ab-8e72-4058-8e92-596c88905649",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_10\\EV_20260928_152347_D9372.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_10\\EV_20260928_152347_D9372_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_10\\EV_20260928_152347_D9372.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_10\\EV_20260928_152347_D9372.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_10\\EV_20260928_152347_D9372_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_10\\EV_20260928_152347_D9372_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_head_turning",
+      "interaction_toward_neighbor"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n75.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Leaning posture or wrist/arm movement below desk height detected\n\u2022 Confirmed behavior pattern: Repeated Head Turning\n\u2022 Confirmed behavior pattern: Interaction Toward Neighbor\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Escalate to Invigilator"
+  }
+}

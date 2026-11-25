@@ -46,6 +46,7 @@ class DecisionAgent:
 
         self.decisions: Dict[int, Decision] = {}
         self.last_alert_time: Dict[int, float] = {}
+        self.last_alert_level: Dict[int, AlertLevel] = {}
 
         self.alert_history: List[Decision] = []
 
@@ -71,26 +72,31 @@ class DecisionAgent:
             should_alert = False
 
             # -----------------------------------------
-            # 🚨 Alert Condition with Cooldown
+            # 🚨 Alert Condition with Cooldown & Escalation
             # -----------------------------------------
+            last_time = self.last_alert_time.get(track_id, 0)
+            last_level = self.last_alert_level.get(track_id, AlertLevel.LOW)
+            
+            level_rank = {AlertLevel.LOW: 0, AlertLevel.MEDIUM: 1, AlertLevel.HIGH: 2, AlertLevel.CRITICAL: 3}
+            is_escalation = level_rank[level] > level_rank.get(last_level, 0)
+
             if score >= self.threshold:
-
-                last_time = self.last_alert_time.get(track_id, 0)
-
-                if now - last_time > self.cooldown:
+                if is_escalation or (now - last_time > self.cooldown):
                     should_alert = True
                     self.last_alert_time[track_id] = now
+                    self.last_alert_level[track_id] = level
 
             # -----------------------------------------
-            # 🧠 Smart Message Formatting
+            # 🧠 Smart Message Formatting (Human-in-the-Loop)
             # -----------------------------------------
             event_text = self._format_events(events)
+            review_suffix = " — review recommended" if level != AlertLevel.LOW else ""
 
             message = (
                 f"[{level.value.upper()}] "
                 f"Student ID {track_id} | "
                 f"Risk Score: {score:.1f} | "
-                f"{event_text}"
+                f"{event_text}{review_suffix}"
             )
 
             decision = Decision(
@@ -183,4 +189,5 @@ class DecisionAgent:
 
         self.decisions.clear()
         self.last_alert_time.clear()
+        self.last_alert_level.clear()
         self.alert_history.clear()

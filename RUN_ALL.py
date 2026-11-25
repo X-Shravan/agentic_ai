@@ -12,9 +12,48 @@ import subprocess
 import time
 import threading
 import platform
+import shutil
 import webbrowser
+import urllib.request
 from pathlib import Path
 from datetime import datetime
+
+
+def configure_console_output():
+    """Avoid UnicodeEncodeError for icons/box drawing on Windows terminals and pipes."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+
+configure_console_output()
+
+
+def get_utf8_env():
+    """Return an environment that keeps Python child process logs UTF-8 safe."""
+    env = os.environ.copy()
+    env.setdefault("PYTHONUTF8", "1")
+    env.setdefault("PYTHONIOENCODING", "utf-8")
+    return env
+
+
+def log_process_failure(name, process):
+    """Print helpful output when a child service exits during startup."""
+    if process is None or process.poll() is None:
+        return
+
+    log_error(f"{name} failed to stay running (exit code: {process.returncode})")
+    try:
+        stdout, stderr = process.communicate(timeout=1)
+    except Exception:
+        return
+
+    if stdout:
+        print(f"\n--- {name} stdout ---\n{stdout[-2000:]}")
+    if stderr:
+        print(f"\n--- {name} stderr ---\n{stderr[-2000:]}")
 
 # ANSI Colors for terminal output
 class Colors:
@@ -61,12 +100,49 @@ def get_project_root():
     return Path(__file__).parent.absolute()
 
 
+def get_python_executable(project_root):
+    """Resolve the virtual environment Python interpreter if present, else fallback to sys.executable."""
+    if platform.system() == "Windows":
+        venv_python = project_root / ".venv" / "Scripts" / "python.exe"
+    else:
+        venv_python = project_root / ".venv" / "bin" / "python"
+    
+    if venv_python.exists():
+        return str(venv_python)
+    return sys.executable
+
+
+def get_npm_command():
+    """Return the npm executable path/name that works with subprocess on Windows."""
+    if platform.system() == "Windows":
+        return shutil.which("npm.cmd") or shutil.which("npm") or "npm.cmd"
+    return shutil.which("npm") or "npm"
+
+
+def wait_for_http(url, timeout=30):
+    """Wait until an HTTP endpoint responds successfully."""
+    deadline = time.time() + timeout
+    last_error = None
+    while time.time() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=3) as response:
+                if 200 <= response.status < 500:
+                    return True
+        except Exception as e:
+            last_error = e
+            time.sleep(1)
+    if last_error:
+        log_warning(f"Timed out waiting for {url}: {last_error}")
+    return False
+
+
 def check_python_installed():
     """Check if Python is installed"""
     log_info("Checking Python installation...")
     try:
-        result = subprocess.run([sys.executable, "--version"], capture_output=True, text=True)
-        log_success(f"Python {result.stdout.strip()} found")
+        py_exe = get_python_executable(get_project_root())
+        result = subprocess.run([py_exe, "--version"], capture_output=True, text=True)
+        log_success(f"Python {result.stdout.strip()} found ({py_exe})")
         return True
     except Exception as e:
         log_error(f"Python not found: {e}")
@@ -74,15 +150,39 @@ def check_python_installed():
 
 
 def check_nodejs_installed():
-    """Check if Node.js is installed"""
+    """Check if Node.js and npm are installed"""
     log_info("Checking Node.js installation...")
+    node_available = False
+    npm_available = False
+    npm_command = get_npm_command()
+
     try:
         result = subprocess.run(["node", "--version"], capture_output=True, text=True)
-        log_success(f"Node.js {result.stdout.strip()} found")
-        return True
+        if result.returncode == 0:
+            log_success(f"Node.js {result.stdout.strip()} found")
+            node_available = True
+        else:
+            log_warning("Node.js command returned a non-zero exit code")
     except Exception as e:
         log_warning(f"Node.js not found: {e} - Frontend will not run")
         return False
+
+    log_info("Checking npm installation...")
+    try:
+        result = subprocess.run([npm_command, "--version"], capture_output=True, text=True)
+        if result.returncode == 0:
+            log_success(f"npm {result.stdout.strip()} found")
+            npm_available = True
+        else:
+            log_warning("npm command returned a non-zero exit code")
+    except Exception as e:
+        log_warning(f"npm not found: {e} - Frontend will be skipped")
+
+    if node_available and npm_available:
+        return True
+
+    log_warning("Frontend dependencies are unavailable - skipping React frontend")
+    return False
 
 
 def install_python_requirements(project_root):
@@ -96,8 +196,9 @@ def install_python_requirements(project_root):
     
     try:
         log_info(f"Installing from {requirements_file}...")
+        py_exe = get_python_executable(project_root)
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-r", str(requirements_file)],
+            [py_exe, "-m", "pip", "install", "-r", str(requirements_file)],
             check=True
         )
         log_success("Python requirements installed")
@@ -121,7 +222,7 @@ def install_frontend_dependencies(project_root):
     try:
         log_info("Installing Node.js dependencies...")
         subprocess.run(
-            ["npm", "install"],
+            [get_npm_command(), "install"],
             cwd=str(frontend_dir),
             check=True
         )
@@ -147,13 +248,21 @@ def start_backend(project_root):
     
     try:
         log_info("Starting FastAPI backend on http://localhost:8000")
+        py_exe = get_python_executable(project_root)
         process = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "backend.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
+            [py_exe, "-m", "uvicorn", "backend.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
             cwd=str(project_root),
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=get_utf8_env()
         )
         time.sleep(2)
+        if process.poll() is not None:
+            log_process_failure("Backend server", process)
+            return None
         log_success("Backend server started (PID: {})".format(process.pid))
         return process
     except Exception as e:
@@ -174,13 +283,29 @@ def start_frontend(project_root):
     
     try:
         log_info("Starting React frontend on http://localhost:3000")
+        frontend_env = {
+            **get_utf8_env(),
+            "BROWSER": "none",
+            "HOST": "127.0.0.1",
+            "PORT": "3000",
+            "CI": "true",
+        }
         process = subprocess.Popen(
-            ["npm", "start"],
+            [get_npm_command(), "start"],
             cwd=str(frontend_dir),
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=frontend_env
         )
         time.sleep(3)
+        if process.poll() is not None:
+            log_process_failure("Frontend", process)
+            return None
+        if not wait_for_http("http://127.0.0.1:3000", timeout=30):
+            log_warning("Frontend process is running but did not respond on http://127.0.0.1:3000 yet")
         log_success("Frontend started (PID: {})".format(process.pid))
         return process
     except Exception as e:
@@ -200,14 +325,21 @@ def start_dashboard(project_root):
     
     try:
         log_info("Starting Flask dashboard on http://localhost:5000")
+        py_exe = get_python_executable(project_root)
         process = subprocess.Popen(
-            [sys.executable, str(dashboard_app)],
+            [py_exe, str(dashboard_app)],
             cwd=str(project_root),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env={**os.environ, "FLASK_APP": str(dashboard_app), "FLASK_ENV": "development"}
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env={**get_utf8_env(), "FLASK_APP": str(dashboard_app), "FLASK_ENV": "development"}
         )
         time.sleep(2)
+        if process.poll() is not None:
+            log_process_failure("Dashboard", process)
+            return None
         log_success("Dashboard started (PID: {})".format(process.pid))
         return process
     except Exception as e:
@@ -227,13 +359,21 @@ def start_simple_api(project_root):
     
     try:
         log_info("Starting Simple API server on http://localhost:8080")
+        py_exe = get_python_executable(project_root)
         process = subprocess.Popen(
-            [sys.executable, str(api_file)],
+            [py_exe, str(api_file)],
             cwd=str(project_root),
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=get_utf8_env()
         )
         time.sleep(2)
+        if process.poll() is not None:
+            log_process_failure("Simple API server", process)
+            return None
         log_success("Simple API server started (PID: {})".format(process.pid))
         return process
     except Exception as e:

@@ -25,9 +25,17 @@ MODEL_SEARCH_ORDER = (
 
 
 def first_existing_path(paths: Iterable[str]) -> str | None:
-    """Return the first path that exists on disk."""
+    """Return the first path that exists on disk and is a valid model binary."""
+    import logging
+    reg_logger = logging.getLogger(__name__)
+
     for path in paths:
-        if Path(path).exists():
+        p = Path(path)
+        if p.exists():
+            # Check for corrupt placeholder text files (e.g. 53-byte placeholder text)
+            if p.suffix.lower() == ".pt" and p.stat().st_size < 1024 * 1024:
+                reg_logger.warning("INVALID MODEL FILE: %s is too small (%d bytes), skipping placeholder.", path, p.stat().st_size)
+                continue
             return path
     return None
 
@@ -41,12 +49,23 @@ def resolve_yolo_model_path(config: dict | None = None) -> str:
     3. `models/yolo11n.pt` from the user's `version1` branch.
     4. Backward-compatible fallbacks.
     """
+    import logging
+    reg_logger = logging.getLogger(__name__)
+
     env_path = os.getenv("EXAM_YOLO_MODEL_PATH")
-    if env_path:
-        return env_path
+    if env_path and Path(env_path).exists():
+        p = Path(env_path)
+        if p.suffix.lower() == ".pt" and p.stat().st_size < 1024 * 1024:
+            reg_logger.warning("INVALID MODEL FILE: %s is too small (%d bytes), skipping placeholder.", env_path, p.stat().st_size)
+        else:
+            return env_path
 
     configured_path = (config or {}).get("model", {}).get("path")
-    if configured_path:
-        return configured_path
+    if configured_path and Path(configured_path).exists():
+        p = Path(configured_path)
+        if p.suffix.lower() == ".pt" and p.stat().st_size < 1024 * 1024:
+            reg_logger.warning("INVALID MODEL FILE: %s is too small (%d bytes), skipping placeholder.", configured_path, p.stat().st_size)
+        else:
+            return configured_path
 
     return first_existing_path(MODEL_SEARCH_ORDER) or CUSTOM_YOLO_MODEL_PATH

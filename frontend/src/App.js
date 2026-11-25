@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import io from 'socket.io-client';
 import Sidebar from './components/Sidebar';
@@ -9,9 +9,7 @@ import StatsCards from './components/StatsCards';
 import AlertsPanel from './components/AlertsPanel';
 import Analytics from './components/Analytics';
 import InsightsPanel from './components/InsightsPanel';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || ''; // Leave empty for api_simple.py HTTP polling mode
+import { API_URL, SOCKET_URL } from './config';
 
 function App() {
   const [dashboardData, setDashboardData] = useState({
@@ -37,6 +35,63 @@ function App() {
     timestamps: [],
     alert_counts: []
   });
+
+  const normalizeBehaviorType = useCallback((type) => {
+    const normalized = String(type || 'Unknown').trim().toLowerCase().replace(/[-\s]+/g, '_');
+    const labels = {
+      phone_detected: 'Using Mobile',
+      mobile_detected: 'Using Mobile',
+      using_mobile: 'Using Mobile',
+      gaze_sideways: 'Looking Around',
+      excessive_turning: 'Looking Around',
+      looking_around: 'Looking Around',
+      gaze_downward: 'Looking to Copy',
+      paper_sharing: 'Looking to Copy',
+      looking_to_copy: 'Looking to Copy',
+      leaning: 'Leaning'
+    };
+    return labels[normalized] || normalized.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+  }, []);
+
+  const normalizeSeverity = useCallback((severity) => String(severity || 'MEDIUM').toUpperCase(), []);
+
+  const normalizeAlert = useCallback((alert, index = 0) => {
+    const firstBehavior = Array.isArray(alert.behaviors) ? alert.behaviors[0] : null;
+    return {
+      ...alert,
+      id: alert.id || alert.alert_id || alert.event_id || `ALERT-${index + 1}`,
+      type: alert.type || normalizeBehaviorType(firstBehavior?.behavior_type || alert.alert_type || alert.reason),
+      severity: normalizeSeverity(alert.severity || alert.risk_level),
+      timestamp: alert.timestamp || alert.created_at || new Date().toISOString()
+    };
+  }, [normalizeBehaviorType, normalizeSeverity]);
+
+  const normalizeDashboardData = useCallback((data, previousData) => {
+    const alerts = Array.isArray(data.alerts) ? data.alerts.map(normalizeAlert) : previousData.alerts;
+    const cheatingTypes = data.cheating_types || data.behavior_counts || previousData.cheating_types || {};
+    const totalStudents = data.total_students ?? previousData.total_students ?? 0;
+    const totalAlerts = data.total_alerts ?? alerts.length ?? previousData.total_alerts ?? 0;
+    const activeIds = data.active_ids ?? totalStudents;
+
+    return {
+      ...previousData,
+      ...data,
+      total_students: totalStudents,
+      active_ids: activeIds,
+      total_alerts: totalAlerts,
+      normal_students: data.normal_students ?? Math.max(0, totalStudents - totalAlerts),
+      alerts,
+      cheating_types: cheatingTypes,
+      monitoring_time: data.monitoring_time || previousData.monitoring_time,
+      system_status: data.system_status || {
+        monitoring: 'Active',
+        detection: 'Running',
+        camera: previousData.system_status?.camera || 'Connected',
+        ai_model: 'Initialized'
+      },
+      system_running: data.system_running ?? true
+    };
+  }, [normalizeAlert]);
 
   useEffect(() => {
     // Connect to SocketIO only when a Socket.IO backend is configured.
@@ -92,10 +147,29 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${API_URL}/dashboard`);
-        if (response.ok) {
-          const data = await response.json();
-          setDashboardData(data);
+        const [analyticsResponse, historyResponse, cheatingResponse] = await Promise.all([
+          fetch(`${API_URL}/analytics/dashboard`),
+          fetch(`${API_URL}/alerts/history?limit=25`),
+          fetch(`${API_URL}/analytics/cheating-types`)
+        ]);
+
+        if (analyticsResponse.ok) {
+          const analytics = await analyticsResponse.json();
+          const history = historyResponse.ok ? await historyResponse.json() : { alerts: [] };
+          const cheating = cheatingResponse.ok ? await cheatingResponse.json() : {};
+          setDashboardData(prevData => normalizeDashboardData({
+            ...analytics,
+            alerts: history.alerts || [],
+            cheating_types: cheating.cheating_types || analytics.behavior_counts || {}
+          }, prevData));
+          setIsConnected(true);
+          return;
+        }
+
+        const fallbackResponse = await fetch(`${API_URL}/dashboard`);
+        if (fallbackResponse.ok) {
+          const data = await fallbackResponse.json();
+          setDashboardData(prevData => normalizeDashboardData(data, prevData));
           setIsConnected(true);
         }
       } catch (error) {
@@ -131,7 +205,7 @@ function App() {
       clearInterval(dashboardInterval);
       clearInterval(timelineInterval);
     };
-  }, [socketConnected]);
+  }, [socketConnected, normalizeDashboardData]);
 
   return (
     <div className="min-h-screen bg-dark-bg text-white flex">
@@ -186,7 +260,7 @@ function App() {
             transition={{ duration: 0.5, delay: 0.6 }}
             className="col-span-12 lg:col-span-8"
           >
-            <Analytics cheatingTypes={dashboardData.cheating_types} />
+            <Analytics cheatingTypes={dashboardData.cheating_types} timelineData={timelineData} />
           </motion.div>
 
           {/* Right Insights */}

@@ -1,0 +1,54 @@
+{
+  "evidence_id": "EV_20261018_194055_9F312",
+  "incident_id": "EV_20261018_194055_9F312",
+  "student_id": "UNKNOWN",
+  "student": "UNKNOWN",
+  "tracking_id": null,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-10-18T14:10:55.362522+00:00",
+  "behaviour": "CORRELATED_GAZE_AND_HEAD_TURNING",
+  "event": "CORRELATED_GAZE_AND_HEAD_TURNING",
+  "confidence": 0.9397161471669806,
+  "risk_score": 93.97,
+  "evidence_image_path": null,
+  "alert_id": null,
+  "image_path": null,
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": null,
+  "annotated_frame_path": null,
+  "annotated_image_path": null,
+  "original_image_path": null,
+  "metadata_path": "storage\\evidence\\2026-10-18\\webcam_0\\unknown\\EV_20261018_194055_9F312_metadata.json",
+  "metadata": {
+    "risk": {
+      "risk_score": 93.97,
+      "level": "CRITICAL",
+      "components": {
+        "phone_score": 21.21,
+        "gaze_score": 0.0,
+        "pose_score": 0.0,
+        "behavior_score": 72.76,
+        "history_score": 0.0
+      },
+      "explanations": [
+        "Risk level CRITICAL from score 94/100.",
+        "Elevated mobile device signal (0.40).",
+        "Elevated fused behavior signal (0.94)."
+      ]
+    },
+    "behaviors": [
+      {
+        "behavior": "CORRELATED_GAZE_AND_HEAD_TURNING",
+        "confidence": 0.9397161471669806
+      },
+      {
+        "behavior": "HEAD_TURNING",
+        "confidence": 0.9397161471669806
+      }
+    ],
+    "privacy": "local_evidence_only"
+  }
+}

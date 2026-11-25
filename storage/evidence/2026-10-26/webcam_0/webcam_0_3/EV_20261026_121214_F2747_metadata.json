@@ -1,0 +1,34 @@
+{
+  "evidence_id": "EV_20261026_121214_F2747",
+  "incident_id": "EV_20261026_121214_F2747",
+  "student_id": "webcam_0_3",
+  "student": "webcam_0_3",
+  "tracking_id": 3,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-10-26T06:42:14.887164+00:00",
+  "behaviour": "Repeated student interaction with correlated gaze (CRITICAL) \u2014 review recommended.",
+  "event": "Repeated student interaction with correlated gaze (CRITICAL) \u2014 review recommended.",
+  "confidence": 0.7401495575904846,
+  "risk_score": 92.0,
+  "evidence_image_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_3\\EV_20261026_121214_F2747.jpg",
+  "alert_id": "6782ae34-d718-479a-8e67-2fde57e4f969",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_3\\EV_20261026_121214_F2747.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_3\\EV_20261026_121214_F2747_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_3\\EV_20261026_121214_F2747.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_3\\EV_20261026_121214_F2747.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_3\\EV_20261026_121214_F2747_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_3\\EV_20261026_121214_F2747_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_student_interaction_with_correlated_gaze",
+      "head_turning"
+    ],
+    "risk_level": "CRITICAL",
+    "gemini_explanation": "Risk Score:\n92.0 / 100 (CRITICAL)\n\nContributing Factors\n\u2022 Confirmed behavior pattern: Repeated Student Interaction With Correlated Gaze\n\u2022 Confirmed behavior pattern: Head Turning\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Critical Incident"
+  }
+}

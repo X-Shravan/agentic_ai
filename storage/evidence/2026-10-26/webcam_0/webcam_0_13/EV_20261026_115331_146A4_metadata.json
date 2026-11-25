@@ -1,0 +1,34 @@
+{
+  "evidence_id": "EV_20261026_115331_146A4",
+  "incident_id": "EV_20261026_115331_146A4",
+  "student_id": "webcam_0_13",
+  "student": "webcam_0_13",
+  "tracking_id": 13,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-10-26T06:23:31.795412+00:00",
+  "behaviour": "Repeated student interaction with correlated gaze (CRITICAL) \u2014 review recommended.",
+  "event": "Repeated student interaction with correlated gaze (CRITICAL) \u2014 review recommended.",
+  "confidence": 0.9093053936958313,
+  "risk_score": 92.0,
+  "evidence_image_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_13\\EV_20261026_115331_146A4.jpg",
+  "alert_id": "f386a5d7-a575-4abb-b2a1-0f32afe46fb8",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_13\\EV_20261026_115331_146A4.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_13\\EV_20261026_115331_146A4_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_13\\EV_20261026_115331_146A4.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_13\\EV_20261026_115331_146A4.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_13\\EV_20261026_115331_146A4_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_13\\EV_20261026_115331_146A4_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_student_interaction_with_correlated_gaze",
+      "head_turning"
+    ],
+    "risk_level": "CRITICAL",
+    "gemini_explanation": "Risk Score:\n92.0 / 100 (CRITICAL)\n\nContributing Factors\n\u2022 Confirmed behavior pattern: Repeated Student Interaction With Correlated Gaze\n\u2022 Confirmed behavior pattern: Head Turning\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Critical Incident"
+  }
+}

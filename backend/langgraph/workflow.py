@@ -5,6 +5,7 @@ import asyncio
 from typing import Any, Callable, Dict, Optional
 
 from backend.agents.behavior_agent import FusionInput, MultiModalFusionEngine
+from backend.agents.detection_agent import Detection
 from backend.agents.evidence_agent import EvidenceAgent
 from backend.agents.face_agent import FaceAnalysisAgent
 from backend.agents.gaze_agent import GazeAgent
@@ -71,9 +72,12 @@ class SurveillanceWorkflow:
         return state
 
     def tracking_node(self, state: SurveillanceState) -> SurveillanceState:
-        detections = state.get("raw_detections") or state.get("detections") or []
+        raw = state.get("raw_detections")
+        raw_list = raw if raw is not None else state.get("detections") or []
+        detections = [Detection.from_item(d) for d in raw_list]
+        state["raw_detections"] = detections
         if self.tracking_agent:
-            tracks = self.tracking_agent.update(detections)
+            tracks = self.tracking_agent.update(detections, frame=state.get("frame"))
             state["raw_tracks"] = tracks
             state["tracks"] = [self._track_to_dict(t, state) for t in tracks]
         return state
@@ -103,7 +107,7 @@ class SurveillanceWorkflow:
 
     def behavior_node(self, state: SurveillanceState) -> SurveillanceState:
         fusion_input = self._build_fusion_input(state)
-        output = self.behavior_agent.fuse(fusion_input)
+        output = self.behavior_agent.fuse(fusion_input, track_id=state.get("tracking_id"))
         state["behavior_fusion"] = output.__dict__.copy()
         state["behavior_fusion"]["risk_level"] = output.risk_level.value
         state["behaviors"] = [
@@ -135,7 +139,22 @@ class SurveillanceWorkflow:
         return state
 
     async def gemini_node(self, state: SurveillanceState) -> SurveillanceState:
-        state["ai_reasoning"] = await self.gemini_agent.analyze_alert(self._gemini_payload(state))
+        try:
+            if not self.gemini_agent:
+                state["ai_reasoning"] = {}
+                return state
+
+            payload = self._gemini_payload(state)
+            risk = state.get("risk", {})
+            risk_score = float(risk.get("risk_score", 0.0))
+            has_alert = bool(state.get("evidence")) or bool(state.get("behaviors")) or risk_score >= 40.0
+
+            if has_alert:
+                state["ai_reasoning"] = await self.gemini_agent.analyze_alert(payload)
+            else:
+                state["ai_reasoning"] = self.gemini_agent._fallback_analysis(self.gemini_agent._privacy_filter(payload))
+        except Exception as e:
+            state["ai_reasoning"] = {"error": str(e), "verification_status": "temporarily_unavailable"}
         return state
 
     def report_node(self, state: SurveillanceState) -> SurveillanceState:
@@ -170,6 +189,8 @@ class SurveillanceWorkflow:
         skeleton = state.get("skeleton_analysis", {}) or {}
         detections = state.get("detections", []) or []
         gaze_dir = str(gaze.get("gaze") or gaze.get("direction") or "").upper()
+        tracks = state.get("tracks") or []
+        first_track = tracks[0] if tracks else {}
         return FusionInput(
             gaze_left_score=gaze.get("confidence", 0.0) if gaze_dir == "LEFT" else 0.0,
             gaze_right_score=gaze.get("confidence", 0.0) if gaze_dir == "RIGHT" else 0.0,
@@ -181,7 +202,9 @@ class SurveillanceWorkflow:
             wrist_below_desk_score=float(skeleton.get("wrist_movement_severity") or 0.0),
             arm_extension_score=float(skeleton.get("arm_movement_severity") or 0.0),
             shoulder_movement_score=min(1.0, abs(float(skeleton.get("shoulder_angle_degrees") or 0.0)) / 45.0),
-            phone_visible_score=max((d.get("confidence", 0.0) for d in detections if d.get("class") in {"mobile", "cell phone"}), default=0.0),
+            phone_visible_score=max((d.get("confidence", 0.0) for d in detections if d.get("class") in {"mobile", "cell phone", "phone", "earphones", "earbuds", "bluetooth device", "tablet"}), default=0.0),
+            track_id=state.get("tracking_id"),
+            bbox=tuple(first_track.get("bbox", [])) if len(first_track.get("bbox", [])) >= 4 else None
         )
 
     def _gemini_payload(self, state: SurveillanceState) -> Dict[str, Any]:
@@ -198,7 +221,7 @@ class SurveillanceWorkflow:
             "eye_gaze": gaze.get("gaze") or gaze.get("direction"),
             "head_pose": face.get("head_pose"),
             "pose": "LEANING" if skeleton.get("leaning_detected") else "HIDDEN_HAND" if skeleton.get("wrist_below_desk") else "NORMAL",
-            "mobile_detected": any(d.get("class") in {"mobile", "cell phone"} for d in state.get("detections", [])),
+            "mobile_detected": any(d.get("class") in {"mobile", "cell phone", "phone", "earphones", "earbuds", "bluetooth device", "tablet"} for d in state.get("detections", [])),
             "timeline": state.get("timeline", []),
             "behaviors": state.get("behaviors", []),
             "tracking_id": state.get("tracking_id"),

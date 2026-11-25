@@ -1,3 +1,3 @@
-import { apiGet } from './api';
+import { getReports } from './api';
 
-export function fetchReports() { return apiGet('/reports'); }
+export function fetchReports() { return getReports(); }

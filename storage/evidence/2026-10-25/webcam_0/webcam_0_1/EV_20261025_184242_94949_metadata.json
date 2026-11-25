@@ -1,0 +1,33 @@
+{
+  "evidence_id": "EV_20261025_184242_94949",
+  "incident_id": "EV_20261025_184242_94949",
+  "student_id": "webcam_0_1",
+  "student": "webcam_0_1",
+  "tracking_id": 1,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-10-25T13:12:42.309060+00:00",
+  "behaviour": "Repeated gaze deviation (HIGH) \u2014 review recommended.",
+  "event": "Repeated gaze deviation (HIGH) \u2014 review recommended.",
+  "confidence": 0.8527952432632446,
+  "risk_score": 75.0,
+  "evidence_image_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184242_94949.jpg",
+  "alert_id": "46b51a56-94f3-4fc0-adea-a5ab2fc093ad",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184242_94949.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184242_94949_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184242_94949.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184242_94949.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184242_94949_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184242_94949_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_gaze_deviation"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n75.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Leaning posture or wrist/arm movement below desk height detected\n\u2022 Confirmed behavior pattern: Repeated Gaze Deviation\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Escalate to Invigilator"
+  }
+}

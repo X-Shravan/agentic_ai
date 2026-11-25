@@ -10,6 +10,9 @@ from typing import Any, Dict, Optional
 import cv2
 import numpy as np
 
+from camera import CameraManager
+from camera.camera_config import load_camera_config
+
 
 # ---------------------------------------------------
 # Camera Configuration
@@ -31,6 +34,28 @@ class Frame:
     camera_id: str
     timestamp: float
     frame_number: int
+
+
+def _camera_type_for_source(source):
+    text = str(source).lower()
+    if text.startswith("rtsp://"):
+        return "rtsp"
+    if text.startswith("rtmp://"):
+        return "rtmp"
+    if text.startswith("http://") or text.startswith("https://"):
+        return "droidcam"
+    if text.endswith((".mp4", ".avi", ".mov", ".mkv")):
+        return "video_file"
+    return "webcam"
+
+
+def _manager_config_with_sources(config: Dict[str, Any], configured_sources: list[dict] | None = None):
+    manager_config = load_camera_config("camera/camera_config.yaml")
+    if configured_sources:
+        manager_config.explicit_sources = configured_sources
+    manager_config.enable_synthetic_fallback = True
+    manager_config.probe_indices = config.get("camera_manager", {}).get("probe_indices", manager_config.probe_indices)
+    return manager_config
 
 
 # ---------------------------------------------------
@@ -140,8 +165,20 @@ class SurveillanceAgent:
 
         self.config = config
         self.cameras: Dict[str, CameraStream] = {}
-
-        self._init_cameras()
+        configured_sources = []
+        for priority, cam in enumerate(self.config.get("cameras", []), start=1):
+            if cam.get("enabled", True):
+                source = cam.get("rtsp_url") or cam.get("source")
+                if source:
+                    configured_sources.append({
+                        "camera_id": cam.get("id", f"cam_{priority}"),
+                        "name": cam.get("name", f"Camera {priority}"),
+                        "type": _camera_type_for_source(source),
+                        "source": source,
+                        "priority": priority,
+                        "enabled": True,
+                    })
+        self.manager = CameraManager(config=_manager_config_with_sources(config, configured_sources))
 
     def _init_cameras(self):
 
@@ -159,33 +196,22 @@ class SurveillanceAgent:
 
     # ---------------------------------
     def start(self) -> bool:
+        results = self.manager.connect_all()
+        if any(results.values()):
+            return True
 
-        results = []
-
-        for cam in self.cameras.values():
-            results.append(cam.start())
-
-        return all(results)
+        # If configured CCTV/RTSP cameras fail, fall back to discovered webcam/video/synthetic.
+        self.manager.config.explicit_sources = []
+        self.manager.refresh_sources()
+        return self.manager.connect_best_available() is not None
 
     # ---------------------------------
     def stop(self):
-
-        for cam in self.cameras.values():
-            cam.stop()
+        self.manager.stop_all()
 
     # ---------------------------------
     def get_frames(self) -> Dict[str, Frame]:
-
-        frames: Dict[str, Frame] = {}
-
-        for cam_id, stream in self.cameras.items():
-
-            frame = stream.get_latest_frame()
-
-            if frame is not None:
-                frames[cam_id] = frame
-
-        return frames
+        return self.manager.get_frames()
 
 
 # ---------------------------------------------------
@@ -200,102 +226,216 @@ class DemoSurveillanceAgent(SurveillanceAgent):
 
         self.running = False
         self.frame_count = 0
+        self.synthetic_mode = False
+        self.source_label = "Not started"
+        self.last_error = ""
 
         self.target_size = (640, 640)  # 🔥 YOLO optimized
-
-    # ---------------------------------
-    def _find_camera(self):
-
-        print("[INFO] Searching for webcam...")
-
-        preferred = (
-            os.getenv("DROIDCAM_CAMERA_INDEX")
-            or os.getenv("CAMO_CAMERA_INDEX")
-            or os.getenv("CAMERA_INDEX")
-        )
-        indices = [int(preferred)] if preferred and preferred.isdigit() else []
-        indices.extend(i for i in range(10) if i not in indices)
-
-        for i in indices:
-
-            cap = cv2.VideoCapture(i)
-
-            if cap.isOpened():
-                print(f"[INFO] Using camera index: {i}")
-                cap.release()
-                return i
-
-        return None
-
-    # ---------------------------------
-    def start(self) -> bool:
-
         source = (
             os.getenv("DROIDCAM_CAMERA_INDEX")
             or os.getenv("CAMO_CAMERA_INDEX")
             or os.getenv("CAMERA_INDEX")
             or self.config.get("demo", {}).get("video_source")
         )
+        configured_sources = []
+        if source not in (None, ""):
+            configured_sources.append({
+                "camera_id": "demo_cam",
+                "name": "Demo Camera",
+                "type": _camera_type_for_source(source),
+                "source": source,
+                "priority": 1,
+                "enabled": True,
+            })
+        self.manager = CameraManager(config=_manager_config_with_sources(config, configured_sources))
+
+    # ---------------------------------
+    @staticmethod
+    def _coerce_source(source):
+        """Convert numeric camera index strings to ints while preserving file/URL sources."""
+
         if isinstance(source, str) and source.isdigit():
-            source = int(source)
+            return int(source)
+        return source
 
-        if source is None:
-            source = self._find_camera()
+    # ---------------------------------
+    def _candidate_sources(self):
+        """Return camera/video sources in preference order without duplicates."""
 
-        if source is None:
-            print("[ERROR] No camera found")
-            return False
+        configured_source = self.config.get("demo", {}).get("video_source")
+        preferred_sources = [
+            os.getenv("DROIDCAM_CAMERA_INDEX"),
+            os.getenv("CAMO_CAMERA_INDEX"),
+            os.getenv("CAMERA_INDEX"),
+            configured_source,
+        ]
 
-        print(f"[INFO] Starting demo camera from source: {source}")
+        candidates = []
+        seen = set()
 
-        self.cap = cv2.VideoCapture(source)
+        def add_candidate(value):
+            if value in (None, ""):
+                return
+            value = self._coerce_source(value)
+            key = repr(value)
+            if key not in seen:
+                seen.add(key)
+                candidates.append(value)
 
-        if not self.cap.isOpened():
-            print("[ERROR] Could not open camera")
-            return False
+        for source in preferred_sources:
+            add_candidate(source)
 
-        # 🔥 Higher resolution for better detection
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        # If the configured/default camera fails, still try common webcam indices.
+        for index in range(10):
+            add_candidate(index)
 
-        # Reduce latency
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        return candidates
 
-        self.running = True
+    # ---------------------------------
+    def _find_camera(self):
 
-        return True
+        print("[INFO] Searching for webcam...")
+
+        for i in self._candidate_sources():
+
+            cap = cv2.VideoCapture(i)
+
+            if cap.isOpened():
+                print(f"[INFO] Using camera/video source: {i}")
+                cap.release()
+                return i
+
+            cap.release()
+
+        return None
+
+    # ---------------------------------
+    def start(self) -> bool:
+        self.synthetic_mode = False
+        self.source_label = "Starting"
+        self.last_error = ""
+
+        best = self.manager.connect_best_available()
+        if best is None:
+            self.manager.config.explicit_sources = []
+            self.manager.refresh_sources()
+            best = self.manager.connect_best_available()
+
+        self.running = best is not None
+        self._sync_manager_status()
+        return self.running
+
+    # ---------------------------------
+    def _sync_manager_status(self):
+        statuses = self.manager.get_all_status()
+        primary = next((status for status in statuses.values() if status.get("online")), None)
+        primary = primary or next(iter(statuses.values()), None)
+        if not primary:
+            self.synthetic_mode = True
+            self.source_label = "No camera source"
+            self.last_error = "No camera source could be discovered"
+            return
+        self.synthetic_mode = primary.get("type") == "synthetic"
+        self.source_label = primary.get("name") or primary.get("source") or "Camera source"
+        self.last_error = primary.get("last_error") or (
+            "No physical webcam/video source opened; using synthetic simulation feed"
+            if self.synthetic_mode else ""
+        )
+
+    # ---------------------------------
+    def _generate_synthetic_frame(self):
+        """Generate a live-looking classroom simulation frame when no camera exists."""
+
+        height, width = self.target_size
+        frame = np.zeros((height, width, 3), dtype=np.uint8)
+
+        # Background gradient
+        for y in range(height):
+            shade = int(25 + (y / max(1, height)) * 35)
+            frame[y, :] = (shade, shade, shade + 8)
+
+        tick = self.frame_count
+
+        # Classroom board/header
+        cv2.rectangle(frame, (30, 30), (width - 30, 115), (35, 70, 55), -1)
+        cv2.rectangle(frame, (30, 30), (width - 30, 115), (90, 170, 135), 2)
+        cv2.putText(
+            frame,
+            "AI Exam Surveillance - Simulation Camera",
+            (55, 68),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.75,
+            (220, 255, 230),
+            2,
+        )
+        cv2.putText(
+            frame,
+            "No webcam detected: synthetic feed is running",
+            (55, 98),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.52,
+            (180, 220, 255),
+            1,
+        )
+
+        # Desks and moving student silhouettes
+        desk_y_positions = [230, 390, 540]
+        for row, desk_y in enumerate(desk_y_positions):
+            cv2.rectangle(frame, (60, desk_y), (width - 60, desk_y + 35), (75, 55, 40), -1)
+            cv2.line(frame, (60, desk_y), (width - 60, desk_y), (120, 90, 70), 2)
+
+            for col in range(4):
+                base_x = 115 + col * 135
+                wobble = int(8 * np.sin((tick / 12.0) + row + col))
+                head_center = (base_x + wobble, desk_y - 42)
+                body_top = (base_x - 24 + wobble, desk_y - 20)
+                body_bottom = (base_x + 24 + wobble, desk_y + 25)
+
+                cv2.circle(frame, head_center, 22, (80, 150, 210), -1)
+                cv2.rectangle(frame, body_top, body_bottom, (70, 115, 185), -1)
+                cv2.rectangle(
+                    frame,
+                    (base_x - 44 + wobble, desk_y - 75),
+                    (base_x + 44 + wobble, desk_y + 28),
+                    (0, 190, 80),
+                    2,
+                )
+                cv2.putText(
+                    frame,
+                    f"ID {row * 4 + col + 1}",
+                    (base_x - 31 + wobble, desk_y - 82),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.45,
+                    (0, 230, 120),
+                    1,
+                )
+
+        # Add one moving suspicious object to prove the feed is alive.
+        phone_x = 95 + int((tick * 4) % (width - 190))
+        cv2.rectangle(frame, (phone_x, 160), (phone_x + 24, 205), (40, 40, 230), -1)
+        cv2.rectangle(frame, (phone_x, 160), (phone_x + 24, 205), (255, 255, 255), 1)
+        cv2.putText(
+            frame,
+            "SIM LIVE",
+            (width - 145, height - 28),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 255, 255),
+            2,
+        )
+
+        return frame
 
     # ---------------------------------
     def stop(self):
-
         self.running = False
-
-        if self.cap:
-            self.cap.release()
-
+        self.manager.stop_all()
         print("[INFO] Demo camera stopped")
 
     # ---------------------------------
     def get_frames(self) -> Dict[str, Frame]:
-
-        if not self.running or self.cap is None:
+        if not self.running:
             return {}
-
-        ok, frame = self.cap.read()
-
-        if not ok:
-            return {}
-
-        self.frame_count += 1
-
-        # 🔥 Resize for YOLO
-        frame = cv2.resize(frame, self.target_size)
-
-        return {
-            "demo_cam": Frame(
-                frame,
-                "demo_cam",
-                time.time(),
-                self.frame_count
-            )
-        }
+        frames = self.manager.get_frames()
+        self._sync_manager_status()
+        return frames

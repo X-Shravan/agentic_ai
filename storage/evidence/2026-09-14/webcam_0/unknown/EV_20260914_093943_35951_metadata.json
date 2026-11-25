@@ -1,0 +1,50 @@
+{
+  "evidence_id": "EV_20260914_093943_35951",
+  "incident_id": "EV_20260914_093943_35951",
+  "student_id": "UNKNOWN",
+  "student": "UNKNOWN",
+  "tracking_id": null,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-14T04:09:43.964950+00:00",
+  "behaviour": "PHONE_DETECTED",
+  "event": "PHONE_DETECTED",
+  "confidence": 0.9736777118693055,
+  "risk_score": 97.37,
+  "evidence_image_path": null,
+  "alert_id": null,
+  "image_path": null,
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": null,
+  "annotated_frame_path": null,
+  "annotated_image_path": null,
+  "original_image_path": null,
+  "metadata_path": "storage\\evidence\\2026-09-14\\webcam_0\\unknown\\EV_20260914_093943_35951_metadata.json",
+  "metadata": {
+    "risk": {
+      "risk_score": 97.37,
+      "level": "CRITICAL",
+      "components": {
+        "phone_score": 44.58,
+        "gaze_score": 0.0,
+        "pose_score": 0.0,
+        "behavior_score": 52.79,
+        "history_score": 0.0
+      },
+      "explanations": [
+        "Risk level CRITICAL from score 97/100.",
+        "Elevated mobile device signal (0.64).",
+        "Elevated fused behavior signal (0.97)."
+      ]
+    },
+    "behaviors": [
+      {
+        "behavior": "PHONE_DETECTED",
+        "confidence": 0.9736777118693055
+      }
+    ],
+    "privacy": "local_evidence_only"
+  }
+}

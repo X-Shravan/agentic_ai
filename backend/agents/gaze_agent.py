@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from typing import Any, Deque, Dict, Optional, Tuple
 
 import cv2
@@ -38,8 +38,10 @@ class GazeAgent:
 
     def __init__(self, history_size: int = 30):
         self.history: Dict[str, Deque[str]] = defaultdict(lambda: deque(maxlen=history_size))
-        self.mp_face_mesh = mp.solutions.face_mesh if mp else None
+        solutions = getattr(mp, "solutions", None) if mp else None
+        self.mp_face_mesh = getattr(solutions, "face_mesh", None) if solutions else None
         self.face_mesh = None
+
         if self.mp_face_mesh:
             self.face_mesh = self.mp_face_mesh.FaceMesh(
                 static_image_mode=False,
@@ -48,6 +50,9 @@ class GazeAgent:
                 min_detection_confidence=0.5,
                 min_tracking_confidence=0.5,
             )
+        else:
+            logger = __import__("logging").getLogger(__name__)
+            logger.warning("⚠️ MediaPipe iris solutions unavailable; gaze analysis will run in fallback mode")
 
     def analyze(self, frame: np.ndarray, face: Any = None, track: Any = None) -> Dict[str, Any]:
         if frame is None or self.face_mesh is None:
@@ -61,6 +66,7 @@ class GazeAgent:
         results = self.face_mesh.process(cv2.cvtColor(crop, cv2.COLOR_BGR2RGB))
         if not results.multi_face_landmarks:
             return GazeResult(iris_detected=False).to_dict()
+
         landmarks = results.multi_face_landmarks[0].landmark
         if len(landmarks) < 477:
             return GazeResult(iris_detected=False).to_dict()
@@ -110,7 +116,18 @@ class GazeAgent:
             return frame
         x1, y1, x2, y2 = [int(v) for v in bbox]
         h, w = frame.shape[:2]
-        return frame[max(0, y1):min(h, y2), max(0, x1):min(w, x2)]
+        person_h = max(20, y2 - y1)
+        head_h = int(person_h * 0.45)
+        pad_x = int((x2 - x1) * 0.10)
+        pad_y = int(person_h * 0.08)
+        x1_c = max(0, x1 - pad_x)
+        x2_c = min(w, x2 + pad_x)
+        y1_c = max(0, y1 - pad_y)
+        y2_c = min(h, y1 + head_h)
+        crop = frame[y1_c:y2_c, x1_c:x2_c]
+        if crop.shape[0] < 20 or crop.shape[1] < 20:
+            return frame[max(0, y1):min(h, y2), max(0, x1):min(w, x2)]
+        return crop
 
     def _track_key(self, track: Any) -> str:
         if isinstance(track, dict):

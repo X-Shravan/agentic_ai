@@ -1,0 +1,33 @@
+{
+  "evidence_id": "EV_20260914_092746_59E54",
+  "incident_id": "EV_20260914_092746_59E54",
+  "student_id": "webcam_0_6",
+  "student": "webcam_0_6",
+  "tracking_id": 6,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-14T03:57:46.514827+00:00",
+  "behaviour": "Repeated student interaction (HIGH) \u2014 review recommended.",
+  "event": "Repeated student interaction (HIGH) \u2014 review recommended.",
+  "confidence": 0.3378274440765381,
+  "risk_score": 78.0,
+  "evidence_image_path": "storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_6\\EV_20260914_092746_59E54.jpg",
+  "alert_id": "6efe762c-57ec-4db2-b705-8de830da2b77",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_6\\EV_20260914_092746_59E54.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_6\\EV_20260914_092746_59E54_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_6\\EV_20260914_092746_59E54.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_6\\EV_20260914_092746_59E54.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_6\\EV_20260914_092746_59E54_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_6\\EV_20260914_092746_59E54_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_student_interaction"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n78.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Leaning posture or wrist/arm movement below desk height detected\n\u2022 Confirmed behavior pattern: Repeated Student Interaction\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Escalate to Invigilator"
+  }
+}

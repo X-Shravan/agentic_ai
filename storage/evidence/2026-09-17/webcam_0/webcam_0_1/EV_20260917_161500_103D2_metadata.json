@@ -1,0 +1,34 @@
+{
+  "evidence_id": "EV_20260917_161500_103D2",
+  "incident_id": "EV_20260917_161500_103D2",
+  "student_id": "webcam_0_1",
+  "student": "webcam_0_1",
+  "tracking_id": 1,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-17T10:45:00.865995+00:00",
+  "behaviour": "\ud83d\udcf1 Mobile phone detected in vicinity - HIGH RISK",
+  "event": "\ud83d\udcf1 Mobile phone detected in vicinity - HIGH RISK",
+  "confidence": 0.701988935470581,
+  "risk_score": 90.0,
+  "evidence_image_path": "storage\\evidence\\2026-09-17\\webcam_0\\webcam_0_1\\EV_20260917_161500_103D2.jpg",
+  "alert_id": "4a859e1f-b35f-4926-81f4-f3a9a0f5092a",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-17\\webcam_0\\webcam_0_1\\EV_20260917_161500_103D2.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-17\\webcam_0\\webcam_0_1\\EV_20260917_161500_103D2_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-17\\webcam_0\\webcam_0_1\\EV_20260917_161500_103D2.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-17\\webcam_0\\webcam_0_1\\EV_20260917_161500_103D2.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-17\\webcam_0\\webcam_0_1\\EV_20260917_161500_103D2_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-17\\webcam_0\\webcam_0_1\\EV_20260917_161500_103D2_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_gaze_deviation",
+      "phone_detected"
+    ],
+    "risk_level": "CRITICAL",
+    "gemini_explanation": "Risk Score:\n90.0 / 100 (CRITICAL)\n\nContributing Factors\n\u2022 Mobile device detected continuously in the vicinity\n\u2022 Confirmed behavior pattern: Repeated Gaze Deviation\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Critical Incident"
+  }
+}

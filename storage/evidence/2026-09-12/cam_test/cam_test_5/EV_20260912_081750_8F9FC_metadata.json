@@ -1,0 +1,33 @@
+{
+  "evidence_id": "EV_20260912_081750_8F9FC",
+  "incident_id": "EV_20260912_081750_8F9FC",
+  "student_id": "cam_test_5",
+  "student": "cam_test_5",
+  "tracking_id": 5,
+  "camera_id": "cam_test",
+  "timestamp": "2026-09-12T02:47:50.700845+00:00",
+  "behaviour": "Smartwatch Detected",
+  "event": "Smartwatch Detected",
+  "confidence": 0.9,
+  "risk_score": 75.0,
+  "evidence_image_path": "storage\\evidence\\2026-09-12\\cam_test\\cam_test_5\\EV_20260912_081750_8F9FC.jpg",
+  "alert_id": "725664c3-c1d6-46f5-b1ec-5aa1655e9e94",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-12\\cam_test\\cam_test_5\\EV_20260912_081750_8F9FC.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-12\\cam_test\\cam_test_5\\EV_20260912_081750_8F9FC_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-12\\cam_test\\cam_test_5\\EV_20260912_081750_8F9FC.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-12\\cam_test\\cam_test_5\\EV_20260912_081750_8F9FC.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-12\\cam_test\\cam_test_5\\EV_20260912_081750_8F9FC_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-12\\cam_test\\cam_test_5\\EV_20260912_081750_8F9FC_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "smartwatch_detected"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n75.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Confirmed behavior pattern: Smartwatch Detected\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Escalate to Invigilator"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "evidence_id": "EV_20260914_092713_A1653",
+  "incident_id": "EV_20260914_092713_A1653",
+  "student_id": "UNKNOWN",
+  "student": "UNKNOWN",
+  "tracking_id": null,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-14T03:57:13.326256+00:00",
+  "behaviour": "NORMAL_EXAM_BEHAVIOR",
+  "event": "NORMAL_EXAM_BEHAVIOR",
+  "confidence": 0.9327123591973073,
+  "risk_score": 93.27,
+  "evidence_image_path": null,
+  "alert_id": null,
+  "image_path": null,
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": null,
+  "annotated_frame_path": null,
+  "annotated_image_path": null,
+  "original_image_path": null,
+  "metadata_path": "storage\\evidence\\2026-09-14\\webcam_0\\unknown\\EV_20260914_092713_A1653_metadata.json",
+  "metadata": {
+    "risk": {
+      "risk_score": 93.27,
+      "level": "CRITICAL",
+      "components": {
+        "phone_score": 0.0,
+        "gaze_score": 0.0,
+        "pose_score": 0.0,
+        "behavior_score": 93.27,
+        "history_score": 0.0
+      },
+      "explanations": [
+        "Risk level CRITICAL from score 93/100.",
+        "Elevated fused behavior signal (0.93)."
+      ]
+    },
+    "behaviors": [
+      {
+        "behavior": "NORMAL_EXAM_BEHAVIOR",
+        "confidence": 0.9327123591973073
+      },
+      {
+        "behavior": "INTERACTION_TOWARD_NEIGHBOR",
+        "confidence": 0.9327123591973073
+      }
+    ],
+    "privacy": "local_evidence_only"
+  }
+}

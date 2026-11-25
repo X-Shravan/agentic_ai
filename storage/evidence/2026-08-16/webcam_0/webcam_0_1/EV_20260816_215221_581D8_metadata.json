@@ -1,0 +1,35 @@
+{
+  "evidence_id": "EV_20260816_215221_581D8",
+  "incident_id": "EV_20260816_215221_581D8",
+  "student_id": "webcam_0_1",
+  "student": "webcam_0_1",
+  "tracking_id": 1,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-08-16T16:22:21.268325+00:00",
+  "behaviour": "\ud83d\udcf1 Mobile phone detected in vicinity - HIGH RISK",
+  "event": "\ud83d\udcf1 Mobile phone detected in vicinity - HIGH RISK",
+  "confidence": 0.8168140649795532,
+  "risk_score": 75.0,
+  "evidence_image_path": "storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_215221_581D8.jpg",
+  "alert_id": "68a58749-87fd-4038-ab83-b0dc9f4ede4a",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_215221_581D8.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_215221_581D8_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_215221_581D8.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_215221_581D8.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_215221_581D8_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_215221_581D8_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "phone_detected",
+      "peeking_at_neighbor",
+      "forward_leaning"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n75.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Mobile device detected continuously in the vicinity\n\u2022 Leaning posture or wrist/arm movement below desk height detected\n\u2022 Confirmed behavior pattern: Peeking At Neighbor\n\u2022 Confirmed behavior pattern: Forward Leaning\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Critical Incident"
+  }
+}

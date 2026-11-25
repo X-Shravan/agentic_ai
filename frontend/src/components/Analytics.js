@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, PieChart as PieChartIcon } from 'lucide-react';
+import { API_URL } from '../config';
 
-function Analytics({ cheatingTypes }) {
+function Analytics({ cheatingTypes, timelineData }) {
   const [timeData, setTimeData] = useState([]);
   const [pieData, setPieData] = useState([
     { name: 'Using Mobile', value: 0, color: '#ff4444' },
@@ -12,34 +13,42 @@ function Analytics({ cheatingTypes }) {
     { name: 'Leaning', value: 0, color: '#00ff88' }
   ]);
 
+  const buildChartData = (data) => {
+    const times = data?.timestamps || [];
+    const alerts = data?.alert_counts || [];
+    const startIndex = Math.max(0, times.length - 20);
+
+    return times.slice(startIndex).map((time, index) => {
+      const date = new Date(time);
+      const timeStr = Number.isNaN(date.getTime())
+        ? String(time)
+        : date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+
+      return {
+        time: timeStr,
+        alerts: alerts[startIndex + index] || 0
+      };
+    });
+  };
+
+  useEffect(() => {
+    if (timelineData?.timestamps?.length) {
+      setTimeData(buildChartData(timelineData));
+    }
+  }, [timelineData]);
+
   useEffect(() => {
     // Fetch real-time timeline data
     const fetchTimeline = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/analytics/timeline`);
+        const response = await fetch(`${API_URL}/analytics/timeline`);
         if (response.ok) {
           const data = await response.json();
-          
-          // Convert timestamps to time format (HH:MM)
-          const times = data.timestamps || [];
-          const alerts = data.alert_counts || [];
-          
-          // Create chart data with last 20 entries
-          const chartData = times.slice(-20).map((time, index) => {
-            const date = new Date(time);
-            const timeStr = date.toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              hour12: false 
-            });
-            
-            return {
-              time: timeStr,
-              alerts: alerts[times.length - 20 + index] || 0
-            };
-          });
-          
-          setTimeData(chartData);
+          setTimeData(buildChartData(data));
         }
       } catch (error) {
         console.log('Fetching timeline data...');

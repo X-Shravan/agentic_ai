@@ -1,0 +1,33 @@
+{
+  "evidence_id": "EV_20261025_184254_B5982",
+  "incident_id": "EV_20261025_184254_B5982",
+  "student_id": "webcam_0_1",
+  "student": "webcam_0_1",
+  "tracking_id": 1,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-10-25T13:12:54.102825+00:00",
+  "behaviour": "Repeated gaze deviation (HIGH) \u2014 review recommended.",
+  "event": "Repeated gaze deviation (HIGH) \u2014 review recommended.",
+  "confidence": 0.8385380506515503,
+  "risk_score": 75.0,
+  "evidence_image_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184254_B5982.jpg",
+  "alert_id": "2f8de0f1-4ba8-424c-8849-ee5120c0d688",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184254_B5982.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184254_B5982_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184254_B5982.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184254_B5982.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184254_B5982_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_1\\EV_20261025_184254_B5982_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_gaze_deviation"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n75.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Confirmed behavior pattern: Repeated Gaze Deviation\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Escalate to Invigilator"
+  }
+}

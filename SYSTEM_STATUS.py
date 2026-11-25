@@ -9,6 +9,37 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
+
+def check_email_configuration():
+    """Check whether email configuration has been completed locally."""
+
+    config_file = Path("email_config.txt")
+    if not config_file.exists():
+        return False, "email_config.txt not found"
+
+    sender_email = None
+    app_password = None
+    recipient_email = None
+
+    try:
+        with config_file.open("r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("SENDER_EMAIL="):
+                    sender_email = line.split("=", 1)[1].strip()
+                elif line.startswith("APP_PASSWORD="):
+                    app_password = line.split("=", 1)[1].strip()
+                elif line.startswith("RECIPIENT_EMAIL="):
+                    recipient_email = line.split("=", 1)[1].strip()
+
+        if sender_email and app_password:
+            recipient_note = f" → {recipient_email}" if recipient_email else ""
+            return True, f"Configured{recipient_note}"
+
+        return False, "email_config.txt is incomplete"
+    except Exception as exc:
+        return False, f"email_config.txt unreadable: {exc}"
+
 def check_system():
     """Final system readiness check"""
     
@@ -138,10 +169,16 @@ def show_system_status():
     print("\n" + "="*80)
     print("  📊 SYSTEM STATUS")
     print("="*80 + "\n")
+
+    email_configured, email_note = check_email_configuration()
     
     components = [
         ("Alert Logger", "✅ Ready", "Real-time collection"),
-        ("Email Sender", "✅ Ready", "Needs configuration"),
+        (
+            "Email Sender",
+            "✅ Ready" if email_configured else "⚠️ Pending",
+            email_note,
+        ),
         ("Report Generator", "✅ Ready", "Existing + reportlab"),
         ("Setup Wizard", "✅ Ready", "One-time setup"),
         ("Documentation", "✅ Complete", "7 guides, 2000+ lines"),
@@ -178,13 +215,20 @@ def main():
     print("="*80)
     print("  ✅ FINAL STATUS")
     print("="*80 + "\n")
+
+    email_configured, _ = check_email_configuration()
     
     if files_ok and modules_ok:
         print("  Status: ✅ READY FOR DEPLOYMENT")
         print("  All files present and verified")
         print("  All dependencies installed")
         print("  Documentation complete")
-        print("\n  Next: python setup_wizard.py\n")
+        if email_configured:
+            print("  Email configuration complete")
+            print("\n  Next: python main.py\n")
+        else:
+            print("  Email configuration still pending")
+            print("\n  Next: python setup_wizard.py\n")
         
         show_next_steps()
         

@@ -1,0 +1,33 @@
+{
+  "evidence_id": "EV_20261026_160710_01460",
+  "incident_id": "EV_20261026_160710_01460",
+  "student_id": "webcam_0_4",
+  "student": "webcam_0_4",
+  "tracking_id": 4,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-10-26T10:37:11.566374+00:00",
+  "behaviour": "Repeated head turning (HIGH) \u2014 review recommended.",
+  "event": "Repeated head turning (HIGH) \u2014 review recommended.",
+  "confidence": 0.9431918859481812,
+  "risk_score": 75.0,
+  "evidence_image_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_4\\EV_20261026_160710_01460.jpg",
+  "alert_id": "29a0e881-7454-4738-9df1-4fda12c8bbb3",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_4\\EV_20261026_160710_01460.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_4\\EV_20261026_160710_01460_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_4\\EV_20261026_160710_01460.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_4\\EV_20261026_160710_01460.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_4\\EV_20261026_160710_01460_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-10-26\\webcam_0\\webcam_0_4\\EV_20261026_160710_01460_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_head_turning"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n75.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Confirmed behavior pattern: Repeated Head Turning\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Escalate to Invigilator"
+  }
+}

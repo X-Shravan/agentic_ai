@@ -1,0 +1,35 @@
+camera:
+  preferred: auto
+
+sources:
+  - webcam
+  - usb
+  - droidcam
+  - rtsp
+  - rtmp
+  - video_file
+
+fallback:
+  - webcam
+  - video_file
+  - synthetic
+
+settings:
+  target_fps: 30
+  width: 1280
+  height: 720
+  buffer_size: 1
+  max_active_cameras: 4
+  enable_synthetic_fallback: true
+
+discovery:
+  probe_indices: [0, 1, 2]
+  probe_network: false
+
+configured_sources:
+  - camera_id: webcam_0
+    name: Laptop Camera 0
+    type: laptop_webcam
+    source: 0
+    priority: 1
+    enabled: true

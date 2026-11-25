@@ -1,0 +1,35 @@
+{
+  "evidence_id": "EV_20261025_182451_4AEFB",
+  "incident_id": "EV_20261025_182451_4AEFB",
+  "student_id": "webcam_0_10",
+  "student": "webcam_0_10",
+  "tracking_id": 10,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-10-25T12:54:51.794516+00:00",
+  "behaviour": "Repeated student interaction with correlated gaze (CRITICAL) \u2014 review recommended.",
+  "event": "Repeated student interaction with correlated gaze (CRITICAL) \u2014 review recommended.",
+  "confidence": 0.8655461072921753,
+  "risk_score": 92.0,
+  "evidence_image_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_10\\EV_20261025_182451_4AEFB.jpg",
+  "alert_id": "97e0cdf7-4ffc-4dea-8c9d-f6a246737bb8",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_10\\EV_20261025_182451_4AEFB.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_10\\EV_20261025_182451_4AEFB_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_10\\EV_20261025_182451_4AEFB.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_10\\EV_20261025_182451_4AEFB.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_10\\EV_20261025_182451_4AEFB_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-10-25\\webcam_0\\webcam_0_10\\EV_20261025_182451_4AEFB_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_student_interaction_with_correlated_gaze",
+      "head_turning",
+      "interaction_toward_neighbor"
+    ],
+    "risk_level": "CRITICAL",
+    "gemini_explanation": "Risk Score:\n92.0 / 100 (CRITICAL)\n\nContributing Factors\n\u2022 Confirmed behavior pattern: Repeated Student Interaction With Correlated Gaze\n\u2022 Confirmed behavior pattern: Head Turning\n\u2022 Confirmed behavior pattern: Interaction Toward Neighbor\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Critical Incident"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "evidence_id": "EV_20260914_093534_EB179",
+  "incident_id": "EV_20260914_093534_EB179",
+  "student_id": "webcam_0_3",
+  "student": "webcam_0_3",
+  "tracking_id": 3,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-14T04:05:34.872925+00:00",
+  "behaviour": "Repeated student interaction with correlated gaze (HIGH) \u2014 review recommended.",
+  "event": "Repeated student interaction with correlated gaze (HIGH) \u2014 review recommended.",
+  "confidence": 0.5040702819824219,
+  "risk_score": 75.0,
+  "evidence_image_path": "storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_3\\EV_20260914_093534_EB179.jpg",
+  "alert_id": "bf41677f-0c59-4aec-ae5e-802dc052d69f",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_3\\EV_20260914_093534_EB179.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_3\\EV_20260914_093534_EB179_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_3\\EV_20260914_093534_EB179.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_3\\EV_20260914_093534_EB179.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_3\\EV_20260914_093534_EB179_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-14\\webcam_0\\webcam_0_3\\EV_20260914_093534_EB179_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_student_interaction_with_correlated_gaze",
+      "head_turning"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n75.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Confirmed behavior pattern: Repeated Student Interaction With Correlated Gaze\n\u2022 Confirmed behavior pattern: Head Turning\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Escalate to Invigilator"
+  }
+}

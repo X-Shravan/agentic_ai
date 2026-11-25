@@ -1,0 +1,33 @@
+{
+  "evidence_id": "EV_20260910_185056_F8621",
+  "incident_id": "EV_20260910_185056_F8621",
+  "student_id": "cam_test_22",
+  "student": "cam_test_22",
+  "tracking_id": 22,
+  "camera_id": "cam_test",
+  "timestamp": "2026-09-10T13:20:56.976967+00:00",
+  "behaviour": "Detected: phone detected",
+  "event": "Detected: phone detected",
+  "confidence": 0.9,
+  "risk_score": 75.0,
+  "evidence_image_path": "storage\\evidence\\2026-09-10\\cam_test\\cam_test_22\\EV_20260910_185056_F8621.jpg",
+  "alert_id": "2b4872d6-2af9-4473-8cc0-0651883cb63d",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-10\\cam_test\\cam_test_22\\EV_20260910_185056_F8621.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-10\\cam_test\\cam_test_22\\EV_20260910_185056_F8621_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-10\\cam_test\\cam_test_22\\EV_20260910_185056_F8621.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-10\\cam_test\\cam_test_22\\EV_20260910_185056_F8621.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-10\\cam_test\\cam_test_22\\EV_20260910_185056_F8621_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-10\\cam_test\\cam_test_22\\EV_20260910_185056_F8621_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "phone_detected"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n75.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Mobile device detected continuously in the vicinity\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Critical Cheating Alert"
+  }
+}

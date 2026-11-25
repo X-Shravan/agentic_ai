@@ -8,6 +8,8 @@ RISK_WEIGHTS = {
     "sharing_answers": 25.0,
     "leaning_to_copy": 15.0,
     "hidden_phone": 30.0,
+    "smartwatch_detected": 60.0,
+    "smart_watch_detected": 60.0,
 }
 
 @dataclass

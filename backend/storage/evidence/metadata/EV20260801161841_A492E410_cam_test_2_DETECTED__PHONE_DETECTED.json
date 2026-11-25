@@ -1,0 +1,21 @@
+{
+  "evidence_id": "EV20260801161841_A492E410",
+  "student": "cam_test_2",
+  "event": "Detected: phone detected",
+  "timestamp": "2026-08-01T16:18:41.975547+00:00",
+  "camera_id": "cam_test",
+  "tracking_id": 2,
+  "seat": null,
+  "confidence": 0.9,
+  "risk_score": 28.34,
+  "original_frame_path": "backend\\storage\\evidence\\screenshots\\EV20260801161841_A492E410_cam_test_2_DETECTED__PHONE_DETECTED_original.jpg",
+  "annotated_frame_path": "backend\\storage\\evidence\\screenshots\\EV20260801161841_A492E410_cam_test_2_DETECTED__PHONE_DETECTED_annotated.jpg",
+  "metadata_path": "backend\\storage\\evidence\\metadata\\EV20260801161841_A492E410_cam_test_2_DETECTED__PHONE_DETECTED.json",
+  "metadata": {
+    "behaviors": [
+      "phone_detected"
+    ],
+    "risk_level": "MEDIUM",
+    "gemini_explanation": "Student cam_test_2 has a MEDIUM risk score of 28. Pose signal was UNKNOWN. A single weak suspicious signal was observed."
+  }
+}

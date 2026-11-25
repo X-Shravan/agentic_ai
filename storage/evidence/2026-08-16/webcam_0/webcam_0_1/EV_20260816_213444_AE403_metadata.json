@@ -1,0 +1,31 @@
+{
+  "evidence_id": "EV_20260816_213444_AE403",
+  "incident_id": "EV_20260816_213444_AE403",
+  "student_id": "webcam_0_1",
+  "student": "webcam_0_1",
+  "tracking_id": 1,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-08-16T16:04:44.774151+00:00",
+  "behaviour": "No suspicious behavior detected",
+  "event": "No suspicious behavior detected",
+  "confidence": 0.8699598908424377,
+  "risk_score": 79.86,
+  "evidence_image_path": "storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_213444_AE403.jpg",
+  "alert_id": "f46fd8d0-72dc-4d8f-bbfc-d1483d873521",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_213444_AE403.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_213444_AE403_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_213444_AE403.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_213444_AE403.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_213444_AE403_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-08-16\\webcam_0\\webcam_0_1\\EV_20260816_213444_AE403_metadata.json",
+  "metadata": {
+    "behaviors": [],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n79.9 / 100 (HIGH)\n\nContributing Factors\n\u2022 Isolated suspicious activity trigger\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Escalate to Invigilator"
+  }
+}

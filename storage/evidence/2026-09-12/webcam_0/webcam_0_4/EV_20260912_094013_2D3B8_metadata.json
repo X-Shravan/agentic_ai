@@ -1,0 +1,33 @@
+{
+  "evidence_id": "EV_20260912_094013_2D3B8",
+  "incident_id": "EV_20260912_094013_2D3B8",
+  "student_id": "webcam_0_4",
+  "student": "webcam_0_4",
+  "tracking_id": 4,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-12T04:10:13.690158+00:00",
+  "behaviour": "Detected: phone detected",
+  "event": "Detected: phone detected",
+  "confidence": 0.6952604651451111,
+  "risk_score": 75.0,
+  "evidence_image_path": "storage\\evidence\\2026-09-12\\webcam_0\\webcam_0_4\\EV_20260912_094013_2D3B8.jpg",
+  "alert_id": "76c28b22-adda-4581-8f54-bbd631fed374",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-12\\webcam_0\\webcam_0_4\\EV_20260912_094013_2D3B8.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-12\\webcam_0\\webcam_0_4\\EV_20260912_094013_2D3B8_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-12\\webcam_0\\webcam_0_4\\EV_20260912_094013_2D3B8.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-12\\webcam_0\\webcam_0_4\\EV_20260912_094013_2D3B8.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-12\\webcam_0\\webcam_0_4\\EV_20260912_094013_2D3B8_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-12\\webcam_0\\webcam_0_4\\EV_20260912_094013_2D3B8_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "phone_detected"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n75.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Mobile device detected continuously in the vicinity\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Critical Incident"
+  }
+}

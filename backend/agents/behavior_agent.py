@@ -5,12 +5,21 @@ into unified confidence scores and risk assessment
 """
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from __future__ import annotations
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
 import numpy as np
 import logging
 from collections import deque
+
+from backend.agents.temporal_behavior import (
+    BehaviorConfig,
+    BehavioralEventType,
+    StrictnessMode,
+    TemporalAssessment,
+    TemporalBehaviorTracker,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +58,11 @@ class FusionInput:
     # Timestamp for temporal analysis
     timestamp: float = 0.0
 
+    # Per-Student Identity & Spatial Context
+    track_id: Optional[int] = None
+    bbox: Optional[Tuple[int, int, int, int]] = None
+    is_writing_context: bool = False
+
 
 @dataclass
 class FusionOutput:
@@ -74,23 +88,36 @@ class FusionOutput:
     overall_confidence: float  # 0-1
     modality_confidences: Dict[str, float]
 
+    # Temporal assessment metadata
+    temporal_assessment: Optional[TemporalAssessment] = None
+    episodes_summary: Dict[str, int] = field(default_factory=dict)
+
 
 class MultiModalFusionEngine:
     """
-    Fuses multiple detection modalities into unified risk assessment
-    Weights: gaze (0.30), pose (0.25), phone (0.20), leaning (0.15), movement (0.10)
+    Fuses multiple detection modalities into unified risk assessment.
+    Incorporates temporal behavior analysis, episode debouncing, sliding windows,
+    and cross-modal correlation across DeepSORT tracks.
     """
     
-    def __init__(self, temporal_window: int = 15, persistence_threshold: int = 10):
+    def __init__(
+        self,
+        temporal_window: int = 15,
+        persistence_threshold: int = 10,
+        behavior_config: Optional[BehaviorConfig] = None,
+    ):
         """
         Initialize fusion engine
         
         Args:
             temporal_window: Number of frames for temporal smoothing
             persistence_threshold: Frames required for behavior confirmation
+            behavior_config: Optional configuration for temporal analysis
         """
         self.temporal_window = temporal_window
         self.persistence_threshold = persistence_threshold
+        self.behavior_config = behavior_config or BehaviorConfig()
+        self.temporal_tracker = TemporalBehaviorTracker(self.behavior_config)
         
         # Default weights for modalities
         self.weights = {
@@ -110,27 +137,29 @@ class MultiModalFusionEngine:
         # Behavior persistence tracking
         self.behavior_persistence: Dict[str, int] = {}
         
-        logger.info(f"✅ Multi-modal fusion engine initialized")
+        logger.info(f"✅ Multi-modal fusion engine initialized with TemporalBehaviorTracker")
     
-    def fuse(self, fusion_input: FusionInput) -> FusionOutput:
+    def fuse(self, fusion_input: FusionInput, track_id: Optional[int] = None) -> FusionOutput:
         """
-        Fuse all modalities into unified output
+        Fuse all modalities into unified output using temporal behavior tracking.
         
         Args:
             fusion_input: Input from all detection systems
+            track_id: Optional student DeepSORT Track ID (overrides fusion_input.track_id)
         
         Returns:
             FusionOutput with risk assessment
         """
+        # Resolve student track ID
+        student_track_id = track_id if track_id is not None else (fusion_input.track_id if fusion_input.track_id is not None else 1)
         
-        # Calculate individual modality scores
+        # Calculate individual modality scores for backward compatibility
         gaze_score = self._calculate_gaze_score(fusion_input)
         pose_score = self._calculate_pose_score(fusion_input)
         phone_score = self._calculate_phone_score(fusion_input)
         leaning_score = self._calculate_leaning_score(fusion_input)
         movement_score = self._calculate_movement_score(fusion_input)
         
-        # Store in history for temporal analysis
         component_scores = {
             "gaze": gaze_score,
             "pose": pose_score,
@@ -138,34 +167,82 @@ class MultiModalFusionEngine:
             "leaning": leaning_score,
             "movement": movement_score,
         }
-        
         self.score_history.append(component_scores)
+
+        # ------------------------------------------------------------------
+        # Temporal Behavior Analysis with Debouncing and Sliding Windows
+        # ------------------------------------------------------------------
+        import time as _time
+        curr_t = fusion_input.timestamp if fusion_input.timestamp > 0 else _time.time()
         
-        # Weighted fusion (0-100)
-        overall_score = (
-            gaze_score * self.weights["gaze"] +
-            pose_score * self.weights["pose"] +
-            phone_score * self.weights["phone"] +
-            leaning_score * self.weights["leaning"] +
-            movement_score * self.weights["movement"]
-        ) * 100.0
+        gaze_dir = "CENTER"
+        if fusion_input.gaze_left_score > 0:
+            gaze_dir = "LEFT"
+        elif fusion_input.gaze_right_score > 0:
+            gaze_dir = "RIGHT"
+        elif fusion_input.gaze_down_score > 0:
+            gaze_dir = "DOWN"
+            
+        gaze_results = {
+            "direction": gaze_dir,
+            "confidence": max(fusion_input.gaze_left_score, fusion_input.gaze_right_score, fusion_input.gaze_down_score, 0.8),
+            "iris_detected": (fusion_input.gaze_left_score > 0 or fusion_input.gaze_right_score > 0 or fusion_input.gaze_down_score > 0),
+        }
         
-        # Apply temporal smoothing
-        smoothed_score = self._apply_temporal_smoothing(overall_score)
+        face_results = {
+            "yaw": fusion_input.head_yaw_degrees,
+            "pitch": fusion_input.head_pitch_degrees,
+            "roll": fusion_input.head_roll_degrees,
+            "face_detected": True,
+            "confidence": 0.85,
+        }
         
-        # Detect behaviors
-        primary_behaviors = self._detect_primary_behaviors(fusion_input, component_scores)
-        secondary_behaviors = self._detect_secondary_behaviors(fusion_input, component_scores)
-        
-        # Generate explanations
-        brief_reason, detailed_reasons = self._generate_explanations(
-            fusion_input, component_scores, primary_behaviors
+        # Skeleton simulation class for tracker interface
+        class _SkelMock:
+            detected = True
+            leaning_severity = fusion_input.leaning_score
+            wrist_below_desk = fusion_input.wrist_below_desk_score > 0.5
+            wrist_movement_severity = fusion_input.wrist_below_desk_score
+            arm_movement_severity = fusion_input.arm_extension_score
+            shoulder_angle_degrees = fusion_input.shoulder_movement_score * 45.0
+            overall_confidence = 0.85
+            
+        temporal_assessment = self.temporal_tracker.update_student(
+            track_id=student_track_id,
+            gaze_results=gaze_results,
+            face_results=face_results,
+            skeleton_results=_SkelMock(),
+            detections=[],
+            timestamp=curr_t,
+            bbox=fusion_input.bbox
         )
         
-        # Determine risk level
-        risk_level = self._score_to_risk_level(smoothed_score)
+        # Risk calculation:
+        # If a prohibited phone is visible, object risk applies (90+ CRITICAL).
+        # Otherwise, behavioral score is driven by temporal assessment.
+        if phone_score >= 0.60:
+            overall_score = 90.0 + min(10.0, phone_score * 10.0)
+            risk_level = RiskLevel.CRITICAL
+            brief_reason = "📱 Mobile phone detected in vicinity - HIGH RISK"
+            detailed_reasons = ["Mobile phone detected in vicinity - HIGH RISK"]
+            primary_behaviors = ["phone_detected"]
+        else:
+            overall_score = temporal_assessment.behavioral_score
+            risk_level = RiskLevel(temporal_assessment.risk_level.lower())
+            brief_reason = temporal_assessment.brief_reason
+            detailed_reasons = temporal_assessment.detailed_reasons
+            
+            primary_behaviors = []
+            if temporal_assessment.risk_level != "LOW":
+                primary_behaviors.append(temporal_assessment.primary_behavior.lower().replace(" ", "_"))
+                for s in temporal_assessment.supporting_behaviors:
+                    norm_s = s.lower().split("(")[0].strip().replace(" ", "_")
+                    if norm_s and norm_s not in primary_behaviors:
+                        primary_behaviors.append(norm_s)
+                        
+        secondary_behaviors = self._detect_secondary_behaviors(fusion_input, component_scores)
         
-        # Calculate modality confidences
+        # Modality confidences
         modality_confidences = {
             "gaze": self._calculate_modality_confidence("gaze"),
             "pose": self._calculate_modality_confidence("pose"),
@@ -173,11 +250,10 @@ class MultiModalFusionEngine:
             "leaning": self._calculate_modality_confidence("leaning"),
             "movement": self._calculate_modality_confidence("movement"),
         }
-        
-        overall_confidence = np.mean(list(modality_confidences.values()))
+        overall_confidence = float(np.mean(list(modality_confidences.values())))
         
         return FusionOutput(
-            overall_risk_score=smoothed_score,
+            overall_risk_score=overall_score,
             risk_level=risk_level,
             component_scores=component_scores,
             component_weights=self.weights,
@@ -187,6 +263,8 @@ class MultiModalFusionEngine:
             detailed_reasons=detailed_reasons,
             overall_confidence=overall_confidence,
             modality_confidences=modality_confidences,
+            temporal_assessment=temporal_assessment,
+            episodes_summary=temporal_assessment.episodes_summary
         )
     
     def _calculate_gaze_score(self, fusion_input: FusionInput) -> float:

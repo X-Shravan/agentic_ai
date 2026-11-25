@@ -1,0 +1,34 @@
+{
+  "evidence_id": "EV_20260910_153824_41979",
+  "incident_id": "EV_20260910_153824_41979",
+  "student_id": "webcam_0_4",
+  "student": "webcam_0_4",
+  "tracking_id": 4,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-10T10:08:25.152330+00:00",
+  "behaviour": "Multiple suspicious behaviors detected (2)",
+  "event": "Multiple suspicious behaviors detected (2)",
+  "confidence": 0.9437450170516968,
+  "risk_score": 80.36,
+  "evidence_image_path": "storage\\evidence\\2026-09-10\\webcam_0\\webcam_0_4\\EV_20260910_153824_41979.jpg",
+  "alert_id": "522bc81b-fd39-4ee5-b4d8-49f4ad193283",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-10\\webcam_0\\webcam_0_4\\EV_20260910_153824_41979.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-10\\webcam_0\\webcam_0_4\\EV_20260910_153824_41979_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-10\\webcam_0\\webcam_0_4\\EV_20260910_153824_41979.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-10\\webcam_0\\webcam_0_4\\EV_20260910_153824_41979.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-10\\webcam_0\\webcam_0_4\\EV_20260910_153824_41979_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-10\\webcam_0\\webcam_0_4\\EV_20260910_153824_41979_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "phone_detected",
+      "forward_leaning"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n80.4 / 100 (HIGH)\n\nContributing Factors\n\u2022 Mobile device detected continuously in the vicinity\n\u2022 Leaning posture or wrist/arm movement below desk height detected\n\u2022 Confirmed behavior pattern: Forward Leaning\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Critical Incident"
+  }
+}

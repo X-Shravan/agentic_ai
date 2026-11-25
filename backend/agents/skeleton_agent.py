@@ -87,15 +87,19 @@ class SkeletonAnalyzer:
         self.desk_y_ratio = desk_y_ratio  # Desk is typically lower 30% of frame
         self.desk_y = int(frame_height * desk_y_ratio)
         
-        # Initialize MediaPipe Pose
-        self.mp_pose = mp.solutions.pose
-        self.pose = self.mp_pose.Pose(
-            static_image_mode=False,
-            model_complexity=0,  # Lite model for speed
-            smooth_landmarks=True,
-            min_detection_confidence=0.7,
-            min_tracking_confidence=0.7,
-        )
+        # Initialize MediaPipe Pose when the runtime provides the solutions API.
+        self.mp_pose = getattr(mp, "solutions", None).pose if getattr(mp, "solutions", None) else None
+        self.pose = None
+        if self.mp_pose:
+            self.pose = self.mp_pose.Pose(
+                static_image_mode=False,
+                model_complexity=0,  # Lite model for speed
+                smooth_landmarks=True,
+                min_detection_confidence=0.7,
+                min_tracking_confidence=0.7,
+            )
+        else:
+            logger.warning("⚠️ MediaPipe pose solutions unavailable; skeleton analysis will run in fallback mode")
         
         # History for temporal smoothing
         self.keypoint_history: Dict[int, List[Tuple[float, float]]] = {}
@@ -117,6 +121,9 @@ class SkeletonAnalyzer:
         h, w, _ = frame.shape
         
         # Run pose detection
+        if self.pose is None:
+            return SkeletonAnalysis(detected=False, keypoints={})
+
         results = self.pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         
         if not results.pose_landmarks:
@@ -164,7 +171,7 @@ class SkeletonAnalyzer:
         ]
         
         keypoints = {}
-        for idx, landmark in enumerate(landmarks):
+        for idx, landmark in enumerate(landmarks.landmark):
             if idx < len(keypoint_names):
                 keypoints[keypoint_names[idx]] = PoseKeypoint(
                     name=keypoint_names[idx],
@@ -353,7 +360,7 @@ class SkeletonAnalyzer:
             return 0.0
         
         # Average visibility of all landmarks
-        visibilities = [lm.visibility for lm in landmarks]
+        visibilities = [lm.visibility for lm in landmarks.landmark]
         avg_visibility = np.mean(visibilities)
         
         return float(avg_visibility)
@@ -465,4 +472,5 @@ class SkeletonAnalyzer:
     
     def release(self):
         """Release resources"""
-        self.pose.close()
+        if self.pose:
+            self.pose.close()

@@ -1,0 +1,35 @@
+{
+  "evidence_id": "EV_20260928_152459_1F6ED",
+  "incident_id": "EV_20260928_152459_1F6ED",
+  "student_id": "webcam_0_54",
+  "student": "webcam_0_54",
+  "tracking_id": 54,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-28T09:54:59.767117+00:00",
+  "behaviour": "Repeated student interaction with correlated gaze (HIGH) \u2014 review recommended.",
+  "event": "Repeated student interaction with correlated gaze (HIGH) \u2014 review recommended.",
+  "confidence": 0.8858689665794373,
+  "risk_score": 80.0,
+  "evidence_image_path": "storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_54\\EV_20260928_152459_1F6ED.jpg",
+  "alert_id": "fd1fa1ac-9ae6-487e-99be-19d94e16403f",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_54\\EV_20260928_152459_1F6ED.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_54\\EV_20260928_152459_1F6ED_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_54\\EV_20260928_152459_1F6ED.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_54\\EV_20260928_152459_1F6ED.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_54\\EV_20260928_152459_1F6ED_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-28\\webcam_0\\webcam_0_54\\EV_20260928_152459_1F6ED_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_student_interaction_with_correlated_gaze",
+      "head_turning",
+      "interaction_toward_neighbor"
+    ],
+    "risk_level": "HIGH",
+    "gemini_explanation": "Risk Score:\n80.0 / 100 (HIGH)\n\nContributing Factors\n\u2022 Leaning posture or wrist/arm movement below desk height detected\n\u2022 Confirmed behavior pattern: Repeated Student Interaction With Correlated Gaze\n\u2022 Confirmed behavior pattern: Head Turning\n\u2022 Confirmed behavior pattern: Interaction Toward Neighbor\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Escalate to Invigilator"
+  }
+}

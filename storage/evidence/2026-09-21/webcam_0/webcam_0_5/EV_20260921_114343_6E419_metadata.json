@@ -1,0 +1,35 @@
+{
+  "evidence_id": "EV_20260921_114343_6E419",
+  "incident_id": "EV_20260921_114343_6E419",
+  "student_id": "webcam_0_5",
+  "student": "webcam_0_5",
+  "tracking_id": 5,
+  "camera_id": "webcam_0",
+  "timestamp": "2026-09-21T06:13:43.549298+00:00",
+  "behaviour": "Repeated student interaction with correlated gaze (CRITICAL) \u2014 review recommended.",
+  "event": "Repeated student interaction with correlated gaze (CRITICAL) \u2014 review recommended.",
+  "confidence": 0.8565091490745544,
+  "risk_score": 92.0,
+  "evidence_image_path": "storage\\evidence\\2026-09-21\\webcam_0\\webcam_0_5\\EV_20260921_114343_6E419.jpg",
+  "alert_id": "4bc3f192-aa3d-4956-abe7-14d5584ef2da",
+  "image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-21\\webcam_0\\webcam_0_5\\EV_20260921_114343_6E419.jpg",
+  "evidence_video_path": null,
+  "gemini_summary": null,
+  "reviewer_status": "pending",
+  "session_id": "LIVE",
+  "original_frame_path": "storage\\evidence\\2026-09-21\\webcam_0\\webcam_0_5\\EV_20260921_114343_6E419_original.jpg",
+  "annotated_frame_path": "storage\\evidence\\2026-09-21\\webcam_0\\webcam_0_5\\EV_20260921_114343_6E419.jpg",
+  "annotated_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-21\\webcam_0\\webcam_0_5\\EV_20260921_114343_6E419.jpg",
+  "original_image_path": "D:\\agentic_ai_version1\\storage\\evidence\\2026-09-21\\webcam_0\\webcam_0_5\\EV_20260921_114343_6E419_original.jpg",
+  "metadata_path": "storage\\evidence\\2026-09-21\\webcam_0\\webcam_0_5\\EV_20260921_114343_6E419_metadata.json",
+  "metadata": {
+    "behaviors": [
+      "repeated_student_interaction_with_correlated_gaze",
+      "head_turning",
+      "interaction_toward_neighbor"
+    ],
+    "risk_level": "CRITICAL",
+    "gemini_explanation": "Risk Score:\n92.0 / 100 (CRITICAL)\n\nContributing Factors\n\u2022 Leaning posture or wrist/arm movement below desk height detected\n\u2022 Confirmed behavior pattern: Repeated Student Interaction With Correlated Gaze\n\u2022 Confirmed behavior pattern: Head Turning\n\u2022 Confirmed behavior pattern: Interaction Toward Neighbor\n\nRecommendation\nImmediate invigilator review.",
+    "crew_decision": "Critical Incident"
+  }
+}
